@@ -1,0 +1,191 @@
+<resources>
+    <string name="app_name">FlashLearn</string>
+
+    <!-- Home Dashboard -->
+    <string name="home_title">امروز چه چیزی یاد می‌گیریم؟</string>
+    <string name="home_total_words">مجموع واژگان: %1$d</string>
+    <string name="home_all_caught_up">همه مرورها انجام شد! 🎉</string>
+    <string name="home_daily_review">مرور روزانه</string>
+    <string name="home_weekly_review">مرور هفتگی</string>
+    <string name="home_monthly_review">مرور ماهانه</string>
+    <string name="home_due_count">%1$d آماده</string>
+    <string name="home_all_done">همه انجام شد</string>
+    <string name="home_difficulty_summary">خلاصه سطح سختی</string>
+    <string name="home_view_statistics">مشاهده آمار کامل</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome">به FlashLearn خوش آمدید</string>
+    <string name="onboarding_subtitle">زبان مبدا و مقصد یادگیری خود را انتخاب کنید</string>
+    <string name="onboarding_source_language">زبان مبدا</string>
+    <string name="onboarding_target_language">زبان مقصد</string>
+    <string name="onboarding_saving">در حال ذخیره...</string>
+    <string name="onboarding_start">شروع کنید</string>
+
+    <!-- Common actions (بین چند صفحه مشترک) -->
+    <string name="action_add">افزودن</string>
+    <string name="action_cancel">لغو</string>
+    <string name="action_confirm">تأیید</string>
+    <string name="action_confirm_and_save">تأیید و ذخیره</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_dismiss">انصراف</string>
+    <string name="action_save">ذخیره</string>
+
+    <!-- Add Home -->
+    <string name="add_home_manual">افزودن دستی</string>
+    <string name="add_home_ai">ترجمه با AI</string>
+    <string name="add_home_paste_text">جای‌گذاری متن</string>
+    <string name="add_home_import_file">Import فایل (CSV/JSON)</string>
+
+    <!-- Add Manual -->
+    <string name="add_manual_title">افزودن کلمه جدید</string>
+    <string name="add_manual_source_text_label">متن (%1$s)</string>
+    <string name="add_manual_target_text_label">ترجمه (%1$s)</string>
+    <string name="add_manual_pronunciation_label">تلفظ (اختیاری)</string>
+    <string name="add_manual_example_label">مثال (اختیاری)</string>
+    <string name="add_manual_notes_label">یادداشت (اختیاری)</string>
+    <string name="add_manual_tags_label">برچسب‌ها (با کاما جدا کنید)</string>
+    <string name="add_manual_category_section">دسته‌بندی</string>
+    <string name="add_manual_new_category_label">دسته‌بندی جدید</string>
+    <string name="add_manual_saving">در حال ذخیره...</string>
+
+    <!-- Add AI -->
+    <string name="add_ai_title">افزودن با AI</string>
+    <string name="add_ai_source_text_label">متن (%1$s)</string>
+    <string name="add_ai_translate_button">ترجمه با AI</string>
+    <string name="add_ai_translating">در حال ترجمه...</string>
+    <string name="add_ai_error_generic">خطا در ارتباط با AI</string>
+    <string name="add_ai_preview_title">پیش‌نمایش (قابل ویرایش)</string>
+    <string name="add_ai_translation_label">ترجمه (%1$s)</string>
+    <string name="add_ai_pronunciation_label">تلفظ</string>
+    <string name="add_ai_example_label">مثال</string>
+    <string name="add_ai_definition_prefix">تعریف: %1$s</string>
+    <string name="add_ai_part_of_speech_prefix">نوع کلمه: %1$s</string>
+    <string name="add_ai_saving">در حال ذخیره...</string>
+
+    <!-- Add Paste Text -->
+    <string name="add_paste_title">جای‌گذاری متن</string>
+    <string name="add_paste_subtitle">چند کلمه را با فرمت: متن مبدا / ترجمه / (اختیاری) دسته، هر مورد در یک بلوک جدا با خط خالی، Paste کنید.</string>
+    <string name="add_paste_placeholder">1. manzana\n   سیب\n\n2. viajar\n   سفر کردن</string>
+    <string name="add_paste_parse_button">تجزیه متن</string>
+    <string name="add_paste_preview_count">پیش‌نمایش (%1$d از %2$d مورد انتخاب شده)</string>
+    <string name="add_paste_importing">در حال Import...</string>
+    <string name="add_paste_import_all_button">Import همه (%1$d)</string>
+    <string name="add_paste_import_error">Import متوقف شد: %1$s</string>
+
+    <!-- Add Import File -->
+    <string name="add_import_file_title">Import از فایل</string>
+    <string name="add_import_file_subtitle">فایل CSV (source,target,notes) یا JSON (آرایه‌ای از {source, target, notes}) را انتخاب کنید.</string>
+    <string name="add_import_file_pick_button">انتخاب فایل</string>
+    <string name="add_import_file_default_name">فایل</string>
+    <string name="add_import_file_no_valid_records">هیچ رکورد معتبری در فایل پیدا نشد</string>
+    <string name="add_import_file_read_error">خطا در خواندن فایل: %1$s</string>
+    <string name="add_import_file_preview_count">پیش‌نمایش (%1$d از %2$d مورد انتخاب شده)</string>
+    <string name="add_import_file_importing">در حال Import...</string>
+    <string name="add_import_file_import_all_button">Import همه (%1$d)</string>
+    <string name="add_import_file_import_error">Import متوقف شد: %1$s</string>
+
+    <!-- Review Type Select -->
+    <string name="review_type_random">مرور تصادفی</string>
+    <string name="review_type_daily">روزانه</string>
+    <string name="review_type_weekly">هفتگی</string>
+    <string name="review_type_monthly">ماهانه</string>
+    <string name="review_type_easy">کلمات آسان</string>
+    <string name="review_type_medium">کلمات متوسط</string>
+    <string name="review_type_hard">کلمات سخت</string>
+    <string name="review_type_very_hard">کلمات خیلی سخت</string>
+    <string name="review_type_learned">یادگرفته‌شده</string>
+    <string name="review_type_filter_by_category">فیلتر بر اساس دسته‌بندی (اختیاری)</string>
+    <string name="review_type_all_categories">همه</string>
+    <string name="review_type_section_title">نوع مرور</string>
+
+    <!-- Review Session -->
+    <string name="review_session_correct_wrong_counter">✅ %1$d   ❌ %2$d</string>
+    <string name="review_session_dont_know">بلد نیستم</string>
+    <string name="review_session_know_it">بلدم</string>
+    <string name="review_session_nothing_to_review">چیزی برای مرور نبود</string>
+    <string name="review_session_finished">جلسه مرور تمام شد! 🎉</string>
+    <string name="review_session_result_summary">درست: %1$d   ·   غلط: %2$d</string>
+    <string name="review_session_back_to_home">بازگشت به خانه</string>
+
+    <!-- AI Settings -->
+    <string name="ai_settings_title">تنظیمات AI</string>
+    <string name="ai_settings_security_note">آدرس Endpoint و نام مدل به‌صورت معمولی و API Key به‌صورت رمزنگاری‌شده (Android Keystore) روی همین گوشی ذخیره می‌شوند.</string>
+    <string name="ai_settings_endpoint_label">آدرس Endpoint</string>
+    <string name="ai_settings_model_label">نام مدل</string>
+    <string name="ai_settings_api_key_label">API Key</string>
+    <string name="ai_settings_saving">در حال ذخیره...</string>
+    <string name="ai_settings_saved">ذخیره شد</string>
+
+    <!-- Backup / Restore -->
+    <string name="backup_title">پشتیبان‌گیری و بازیابی</string>
+    <string name="backup_export_description">Export کامل دیتابیس (واژگان، تاریخچه مرور، تنظیمات) به یک فایل JSON.</string>
+    <string name="backup_export_button">ساخت فایل پشتیبان</string>
+    <string name="backup_export_error">خطا در ساخت پشتیبان: %1$s</string>
+    <string name="backup_import_description">Import از یک فایل پشتیبان قبلی. قبل از اعمال، خلاصه تغییرات نشان داده می‌شود.</string>
+    <string name="backup_import_pick_file_button">انتخاب فایل برای Import</string>
+    <string name="backup_invalid_file_error">فایل نامعتبر است: %1$s</string>
+    <string name="backup_apply_import_error">خطا در اعمال Import: %1$s</string>
+    <string name="backup_result_summary">نتیجه: %1$d مورد جدید، %2$d به‌روزرسانی‌شده، %3$d بدون تغییر</string>
+    <string name="backup_auto_snapshot_saved">یک نسخه پشتیبان خودکار از قبل از این Import در حافظه داخلی اپ ذخیره شد.</string>
+    <string name="backup_preview_title">پیش‌نمایش Import</string>
+    <string name="backup_preview_new_count">موارد جدید: %1$d</string>
+    <string name="backup_preview_identical_count">موارد یکسان (بدون تغییر): %1$d</string>
+    <string name="backup_preview_conflict_count">موارد با تعارض: %1$d</string>
+    <string name="backup_preview_conflict_prompt">برای موارد متعارض، کدام نسخه نگه داشته شود؟</string>
+    <string name="backup_preview_auto_snapshot_note">قبل از اعمال، یک نسخه پشتیبان خودکار از وضعیت فعلی گرفته می‌شود.</string>
+    <string name="backup_resolution_keep_existing">نگه‌داشتن موجود</string>
+    <string name="backup_resolution_merge">ادغام (Merge)</string>
+    <string name="backup_resolution_use_imported">استفاده از Import</string>
+
+    <!-- Settings Home -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_theme_section">پوسته</string>
+    <string name="theme_mode_light">روشن</string>
+    <string name="theme_mode_dark">تیره</string>
+    <string name="theme_mode_system">پیش‌فرض سیستم</string>
+    <string name="settings_language_direction_section">جهت زبان</string>
+    <string name="settings_language_pair_format">%1$s → %2$s</string>
+    <string name="settings_language_pair_not_set">تعیین نشده</string>
+    <string name="settings_swap_direction_button">برعکس کردن جهت</string>
+    <string name="settings_change_languages_button">تغییر زبان‌ها</string>
+    <string name="settings_backup_restore_card">پشتیبان‌گیری و بازیابی</string>
+    <string name="settings_ai_settings_card">تنظیمات AI</string>
+
+    <!-- Statistics -->
+    <string name="statistics_title">آمار</string>
+    <string name="statistics_total_words">مجموع واژگان</string>
+    <string name="statistics_stages_section">مراحل یادگیری</string>
+    <string name="statistics_accuracy_section">دقت پاسخ‌ها</string>
+    <string name="statistics_period_today">امروز</string>
+    <string name="statistics_period_this_week">این هفته</string>
+    <string name="statistics_period_this_month">این ماه</string>
+    <string name="statistics_period_all_time">مجموع کل</string>
+    <string name="statistics_accuracy_format">%1$d%% (%2$d/%3$d)</string>
+
+    <!-- Concept Detail -->
+    <string name="concept_detail_not_found">این کلمه پیدا نشد</string>
+    <string name="concept_detail_title">ویرایش کلمه</string>
+    <string name="concept_detail_favorite">موردعلاقه</string>
+    <string name="concept_detail_source_text_label">متن (%1$s)</string>
+    <string name="concept_detail_target_text_label">ترجمه (%1$s)</string>
+    <string name="concept_detail_pronunciation_label">تلفظ</string>
+    <string name="concept_detail_example_label">مثال</string>
+    <string name="concept_detail_notes_label">یادداشت</string>
+    <string name="concept_detail_tags_label">برچسب‌ها (با کاما جدا کنید)</string>
+    <string name="concept_detail_category_section">دسته‌بندی</string>
+    <string name="concept_detail_new_category_label">دسته‌بندی جدید</string>
+    <string name="concept_detail_saving">در حال ذخیره...</string>
+    <string name="concept_detail_save_changes">ذخیره تغییرات</string>
+    <string name="concept_detail_delete_confirm_title">حذف این کلمه؟</string>
+    <string name="concept_detail_delete_confirm_body">این کلمه از لیست‌های مرور حذف می‌شود، اما تاریخچه مرور آن برای همیشه نگه داشته می‌شود.</string>
+
+    <!-- Vocabulary List -->
+    <string name="vocabulary_search_placeholder">جستجو در واژگان...</string>
+    <string name="vocabulary_all_categories">همه</string>
+    <string name="vocabulary_sort_recent">جدیدترین</string>
+    <string name="vocabulary_sort_alphabetical">الفبایی</string>
+    <string name="vocabulary_empty_no_words">هنوز کلمه‌ای اضافه نکرده‌اید</string>
+    <string name="vocabulary_empty_no_match">چیزی با این فیلتر پیدا نشد</string>
+    <string name="vocabulary_add_favorite">افزودن به موردعلاقه‌ها</string>
+    <string name="vocabulary_remove_favorite">حذف از موردعلاقه‌ها</string>
+</resources>
