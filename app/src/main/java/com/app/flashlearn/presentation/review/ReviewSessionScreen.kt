@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -155,8 +155,6 @@ fun ReviewSessionScreen(
                         onClick = viewModel::flipCard,
                         modifier = Modifier.fillMaxWidth().height(56.dp)
                     ) {
-                        Icon(Icons.Filled.Visibility, contentDescription = null)
-                        Spacer(modifier = Modifier.width(Spacing.xs))
                         Text(stringResource(R.string.review_session_show_answer))
                     }
                 }
