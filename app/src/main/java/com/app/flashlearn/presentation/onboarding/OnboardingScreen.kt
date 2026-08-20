@@ -2,12 +2,11 @@ package com.app.flashlearn.presentation.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +27,10 @@ import com.app.flashlearn.ui.theme.Spacing
 /**
  * صفحه اولین اجرا (بند 7 و 70): انتخاب زبان مبدا و مقصد.
  * onFinished فقط وقتی صدا زده می‌شود که ذخیره‌سازی LanguagePair کامل شده باشد.
+ *
+ * نکته مهم: کل صفحه باید Scroll بخورد، چون با ~9 زبان در هر لیست، ارتفاع محتوا از
+ * صفحه‌های کوچک بیشتر می‌شود و دکمه «شروع کنید» باید همیشه با اسکرول در دسترس بماند
+ * (قبلاً این صفحه Scroll نداشت و دکمه از دید کاربر خارج می‌شد).
  */
 @Composable
 fun OnboardingScreen(
@@ -43,6 +46,7 @@ fun OnboardingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.lg)
     ) {
@@ -93,14 +97,16 @@ private fun LanguageGrid(
     selected: String?,
     onSelect: (String) -> Unit
 ) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-        contentPadding = PaddingValues(vertical = Spacing.xs)
-    ) {
-        items(languages) { language ->
+    // Column ساده (نه LazyColumn) عمداً استفاده شده: چون این خودش داخل یک Column با
+    // verticalScroll در والد قرار دارد، یک LazyColumn تودرتو با Constraint نامحدود
+    // Crash می‌کند (IllegalStateException). تعداد زبان‌ها هم کم است (~9 مورد)، پس
+    // نیازی به Lazy بودن نیست.
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        languages.forEach { language ->
             val isSelected = language.code == selected
             Card(
                 onClick = { onSelect(language.code) },
+                modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isSelected) {
                         MaterialTheme.colorScheme.primaryContainer
