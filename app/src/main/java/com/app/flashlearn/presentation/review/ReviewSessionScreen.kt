@@ -8,17 +8,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -86,20 +88,27 @@ fun ReviewSessionScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.lg)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                    LinearProgressIndicator(
-                        progress = { if (state.totalCount == 0) 0f else state.currentIndex / state.totalCount.toFloat() },
-                        modifier = Modifier.fillMaxWidth()
-                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        IconButton(onClick = onFinished) {
+                            Icon(
+                                Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.review_session_exit)
+                            )
+                        }
                         Text(state.progressLabel, style = MaterialTheme.typography.labelMedium)
                         Text(
                             text = stringResource(R.string.review_session_correct_wrong_counter, state.correctCount, state.wrongCount),
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
+                    LinearProgressIndicator(
+                        progress = { if (state.totalCount == 0) 0f else state.currentIndex / state.totalCount.toFloat() },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -114,27 +123,41 @@ fun ReviewSessionScreen(
                     )
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                ) {
-                    Button(
-                        onClick = { viewModel.answer(isCorrect = false) },
-                        modifier = Modifier.weight(1f).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                if (state.isFlipped) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.md)
                     ) {
-                        Icon(Icons.Filled.Close, contentDescription = null)
-                        Spacer(modifier = Modifier.width(Spacing.xs))
-                        Text(stringResource(R.string.review_session_dont_know))
+                        Button(
+                            onClick = { viewModel.answer(isCorrect = false) },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Icon(Icons.Filled.Close, contentDescription = null)
+                            Spacer(modifier = Modifier.width(Spacing.xs))
+                            Text(stringResource(R.string.review_session_dont_know))
+                        }
+                        Button(
+                            onClick = { viewModel.answer(isCorrect = true) },
+                            modifier = Modifier.weight(1f).height(56.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = FlashLearnExtras.status.success)
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = null)
+                            Spacer(modifier = Modifier.width(Spacing.xs))
+                            Text(stringResource(R.string.review_session_know_it))
+                        }
                     }
-                    Button(
-                        onClick = { viewModel.answer(isCorrect = true) },
-                        modifier = Modifier.weight(1f).height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = FlashLearnExtras.status.success)
+                } else {
+                    // بند 32-34 (رفع باگ): قبل از Flip کردن کارت، دکمه‌های بلدم/بلد نیستم
+                    // اصلاً نمایش داده نمی‌شوند تا کاربر مجبور شود اول ترجمه را ببیند و
+                    // نتواند کورکورانه (بدون دیدن معنی) به یک کلمه جواب بدهد.
+                    OutlinedButton(
+                        onClick = viewModel::flipCard,
+                        modifier = Modifier.fillMaxWidth().height(56.dp)
                     ) {
-                        Icon(Icons.Filled.Check, contentDescription = null)
+                        Icon(Icons.Filled.Visibility, contentDescription = null)
                         Spacer(modifier = Modifier.width(Spacing.xs))
-                        Text(stringResource(R.string.review_session_know_it))
+                        Text(stringResource(R.string.review_session_show_answer))
                     }
                 }
             }

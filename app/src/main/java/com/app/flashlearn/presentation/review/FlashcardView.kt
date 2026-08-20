@@ -24,8 +24,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.app.flashlearn.R
 import com.app.flashlearn.domain.model.ContentItem
 import com.app.flashlearn.ui.theme.Radius
 import com.app.flashlearn.ui.theme.Spacing
@@ -60,17 +62,21 @@ fun FlashcardView(
                 translationX = animatedOffset
                 rotationZ = (animatedOffset / 40).coerceIn(-12f, 12f)
             }
-            .pointerInput(Unit) {
+            .pointerInput(isFlipped) {
                 detectHorizontalDragGestures(
                     onDragEnd = {
-                        when {
-                            dragOffsetX > 220f -> onSwipeRight()
-                            dragOffsetX < -220f -> onSwipeLeft()
+                        // بند 32-34: تا کارت Flip نشده (ترجمه دیده نشده)، Swipe نباید
+                        // پاسخ را ثبت کند، وگرنه کاربر می‌تواند بدون دیدن معنی، کور جواب بدهد.
+                        if (isFlipped) {
+                            when {
+                                dragOffsetX > 220f -> onSwipeRight()
+                                dragOffsetX < -220f -> onSwipeLeft()
+                            }
                         }
                         dragOffsetX = 0f
                     },
                     onHorizontalDrag = { _, dragAmount ->
-                        dragOffsetX += dragAmount
+                        if (isFlipped) dragOffsetX += dragAmount
                     }
                 )
             }
@@ -104,6 +110,15 @@ fun FlashcardView(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = Spacing.sm)
+                    )
+                }
+
+                if (!isFlipped) {
+                    Text(
+                        text = stringResource(R.string.review_session_tap_to_reveal),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = Spacing.md)
                     )
                 }
 

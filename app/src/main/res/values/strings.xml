@@ -99,7 +99,10 @@
     <string name="review_type_section_title">نوع مرور</string>
 
     <!-- Review Session -->
+    <string name="review_session_exit">خروج از مرور</string>
     <string name="review_session_correct_wrong_counter">✅ %1$d   ❌ %2$d</string>
+    <string name="review_session_tap_to_reveal">برای دیدن پاسخ لمس کنید</string>
+    <string name="review_session_show_answer">نمایش پاسخ</string>
     <string name="review_session_dont_know">بلد نیستم</string>
     <string name="review_session_know_it">بلدم</string>
     <string name="review_session_nothing_to_review">چیزی برای مرور نبود</string>
