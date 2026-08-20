@@ -22,6 +22,7 @@
     <string name="onboarding_start">شروع کنید</string>
 
     <!-- Common actions (بین چند صفحه مشترک) -->
+    <string name="add_import_result_with_duplicates">%1$d مورد اضافه شد، %2$d مورد تکراری بود و اضافه نشد</string>
     <string name="action_add">افزودن</string>
     <string name="action_cancel">لغو</string>
     <string name="action_confirm">تأیید</string>

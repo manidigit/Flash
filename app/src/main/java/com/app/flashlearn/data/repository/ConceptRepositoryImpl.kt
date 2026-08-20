@@ -54,6 +54,9 @@ class ConceptRepositoryImpl @Inject constructor(
     override suspend fun existsByUuid(uuid: String): Boolean =
         conceptDao.countByUuid(uuid) > 0
 
+    override suspend fun existsByText(languageCode: String, text: String): Boolean =
+        contentDao.countActiveByText(languageCode, text) > 0
+
     override suspend fun getPage(
         limit: Int,
         offset: Int,

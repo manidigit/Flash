@@ -25,6 +25,23 @@ interface ContentDao {
     @Query("SELECT * FROM contents WHERE conceptId = :conceptId AND languageCode = :languageCode LIMIT 1")
     suspend fun getForConceptAndLanguage(conceptId: Long, languageCode: String): ContentEntity?
 
+    /**
+     * برای تشخیص تکراری بودن هنگام Import (بند 64، رفع باگ: کپی چندباره یک کلمه هنگام
+     * Paste/Import هیچ‌وقت به‌عنوان Duplicate تشخیص داده نمی‌شد). فقط بین Concept های
+     * فعال (active=1) و بر اساس متن نرمال‌شده (Trim + lower-case) در همان زبان مقایسه
+     * می‌شود، تا اختلاف فاصله یا بزرگی/کوچکی حروف باعث درج تکراری نشود.
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM contents c
+        INNER JOIN concepts co ON co.id = c.conceptId
+        WHERE co.active = 1
+          AND c.languageCode = :languageCode
+          AND LOWER(TRIM(c.text)) = LOWER(TRIM(:text))
+        """
+    )
+    suspend fun countActiveByText(languageCode: String, text: String): Int
+
     @Query("DELETE FROM contents WHERE conceptId = :conceptId")
     suspend fun deleteAllForConcept(conceptId: Long)
 }

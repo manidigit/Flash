@@ -24,7 +24,8 @@ data class AddImportFileUiState(
     val targetLanguage: String = "fa",
     val errorMessage: UiText? = null,
     val isImporting: Boolean = false,
-    val importedCount: Int? = null
+    val importedCount: Int? = null,
+    val duplicateCount: Int = 0
 ) {
     val includedCount: Int get() = entries.count { it.included }
 }
@@ -100,11 +101,12 @@ class AddImportFileViewModel @Inject constructor(
             // نمی‌ماند؛ ردیف‌های تک‌تک ناموفق هم داخل ImportParsedEntriesUseCase به‌صورت
             // جداگانه Skip می‌شوند، نه اینکه کل Import را متوقف کنند.
             try {
-                val count = importParsedEntries(toImport, state.sourceLanguage, state.targetLanguage)
+                val outcome = importParsedEntries(toImport, state.sourceLanguage, state.targetLanguage)
                 _uiState.value = AddImportFileUiState(
                     sourceLanguage = state.sourceLanguage,
                     targetLanguage = state.targetLanguage,
-                    importedCount = count
+                    importedCount = outcome.insertedCount,
+                    duplicateCount = outcome.duplicateCount
                 )
             } catch (e: Exception) {
                 _uiState.value = state.copy(

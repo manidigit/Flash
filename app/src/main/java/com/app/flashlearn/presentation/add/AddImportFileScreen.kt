@@ -50,7 +50,7 @@ fun AddImportFileScreen(
     val defaultFileLabel = stringResource(R.string.add_import_file_default_name)
 
     LaunchedEffect(state.importedCount) {
-        if (state.importedCount != null) onImported()
+        if (state.importedCount != null && state.duplicateCount == 0) onImported()
     }
 
     val pickFileLauncher = rememberLauncherForActivityResult(
@@ -86,6 +86,21 @@ fun AddImportFileScreen(
 
         state.errorMessage?.let {
             Text(it.asString(), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = Spacing.xs))
+        }
+
+        if (state.importedCount != null && state.duplicateCount > 0) {
+            Text(
+                stringResource(
+                    R.string.add_import_result_with_duplicates,
+                    state.importedCount ?: 0,
+                    state.duplicateCount
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
+            Button(onClick = onImported, modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)) {
+                Text(stringResource(R.string.action_confirm))
+            }
         }
 
         if (state.entries.isNotEmpty()) {

@@ -23,6 +23,7 @@ data class AddPasteTextUiState(
     val targetLanguage: String = "fa",
     val isImporting: Boolean = false,
     val importedCount: Int? = null,
+    val duplicateCount: Int = 0,
     val errorMessage: UiText? = null
 ) {
     val includedCount: Int get() = entries.count { it.included }
@@ -89,11 +90,12 @@ class AddPasteTextViewModel @Inject constructor(
             // بند 64: حتی اگر خطای غیرمنتظره‌ای رخ دهد (مثلاً قطع دیتابیس)، isImporting هرگز
             // برای همیشه true نمی‌ماند و کاربر در این صفحه گیر نمی‌کند.
             try {
-                val count = importParsedEntries(toImport, state.sourceLanguage, state.targetLanguage)
+                val outcome = importParsedEntries(toImport, state.sourceLanguage, state.targetLanguage)
                 _uiState.value = AddPasteTextUiState(
                     sourceLanguage = state.sourceLanguage,
                     targetLanguage = state.targetLanguage,
-                    importedCount = count
+                    importedCount = outcome.insertedCount,
+                    duplicateCount = outcome.duplicateCount
                 )
             } catch (e: Exception) {
                 _uiState.value = state.copy(

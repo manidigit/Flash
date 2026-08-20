@@ -46,8 +46,12 @@ fun AddPasteTextScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    // بند 64 (رفع باگ): قبلاً به‌محض ست‌شدن importedCount بلافاصله از صفحه خارج می‌شدیم و
+    // کاربر هیچ‌وقت نمی‌فهمید چند مورد به‌خاطر تکراری بودن رد شده‌اند. حالا فقط وقتی
+    // duplicateCount صفر است خودکار خارج می‌شویم؛ در غیر این صورت خلاصه نتیجه نمایش داده
+    // می‌شود و کاربر با دکمه خودش خارج می‌شود.
     LaunchedEffect(state.importedCount) {
-        if (state.importedCount != null) onImported()
+        if (state.importedCount != null && state.duplicateCount == 0) onImported()
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(Spacing.lg)) {
@@ -76,6 +80,21 @@ fun AddPasteTextScreen(
 
         state.errorMessage?.let {
             Text(it.asString(), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = Spacing.xs))
+        }
+
+        if (state.importedCount != null && state.duplicateCount > 0) {
+            Text(
+                stringResource(
+                    R.string.add_import_result_with_duplicates,
+                    state.importedCount ?: 0,
+                    state.duplicateCount
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
+            Button(onClick = onImported, modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)) {
+                Text(stringResource(R.string.action_confirm))
+            }
         }
 
         if (state.entries.isNotEmpty()) {

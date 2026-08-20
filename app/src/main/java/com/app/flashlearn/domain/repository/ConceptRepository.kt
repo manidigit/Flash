@@ -12,6 +12,12 @@ interface ConceptRepository {
     suspend fun getById(conceptId: Long): Concept?
     suspend fun getByUuid(uuid: String): Concept?
     suspend fun existsByUuid(uuid: String): Boolean
+
+    /**
+     * آیا Concept فعالی با این متن (نرمال‌شده) در این زبان از قبل وجود دارد؟
+     * برای جلوگیری از درج تکراری هنگام Manual/Paste/Import (بند 64).
+     */
+    suspend fun existsByText(languageCode: String, text: String): Boolean
     suspend fun getPage(
         limit: Int,
         offset: Int,
