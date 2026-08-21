@@ -97,6 +97,33 @@ class AddManualViewModel @Inject constructor(
             _uiState.value = state.copy(isSaving = true)
             val now = DateTimeUtils.now()
             val tags = state.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            val sourceText = state.sourceText.trim()
+            val targetText = state.targetText.trim()
+
+            // بند 64 (رفع باگ «کلمه با چند معنی»): اگر این متن مبدأ از قبل به‌عنوان یک
+            // Concept فعال وجود دارد، به‌جای ساخت یک Concept تکراری، همین معنی جدید به
+            // همان کلمه اضافه می‌شود (مگر اینکه دقیقاً همان معنی از قبل هم موجود باشد).
+            val existingConceptId = conceptRepository.findActiveConceptIdByText(state.sourceLanguage, sourceText)
+            if (existingConceptId != null) {
+                val alreadyHasThisMeaning = conceptRepository.hasTranslation(existingConceptId, state.targetLanguage, targetText)
+                if (!alreadyHasThisMeaning) {
+                    conceptRepository.addTranslation(
+                        existingConceptId,
+                        ContentItem(
+                            languageCode = state.targetLanguage,
+                            text = targetText,
+                            example = state.example.ifBlank { null }
+                        )
+                    )
+                }
+                _uiState.value = AddManualUiState(
+                    sourceLanguage = state.sourceLanguage,
+                    targetLanguage = state.targetLanguage,
+                    categories = state.categories,
+                    saved = true
+                )
+                return@launch
+            }
 
             val concept = Concept(
                 id = 0,
@@ -111,13 +138,13 @@ class AddManualViewModel @Inject constructor(
                 contents = listOf(
                     ContentItem(
                         languageCode = state.sourceLanguage,
-                        text = state.sourceText.trim(),
+                        text = sourceText,
                         pronunciation = state.pronunciation.ifBlank { null },
                         example = state.example.ifBlank { null }
                     ),
                     ContentItem(
                         languageCode = state.targetLanguage,
-                        text = state.targetText.trim(),
+                        text = targetText,
                         example = state.example.ifBlank { null }
                     )
                 ),

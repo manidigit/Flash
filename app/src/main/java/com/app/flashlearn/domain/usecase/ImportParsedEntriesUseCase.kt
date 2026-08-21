@@ -12,26 +12,32 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * نتیجه واقعی Import: چند مورد درج شد و چند مورد به‌خاطر تکراری بودن رد شد.
- * قبلاً فقط یک Int برمی‌گشت و کاربر هیچ بازخوردی درباره موارد تکراری نمی‌گرفت.
+ * نتیجه واقعی Import:
+ * - insertedCount: چند Concept کاملاً جدید ساخته شد
+ * - translationsAddedCount: چند معنی/ترجمه جدید به یک کلمه از قبل موجود اضافه شد (بند 64)
+ * - duplicateCount: چند مورد کاملاً تکراری (همان کلمه + همان معنی) رد شد
  */
-data class ImportOutcome(val insertedCount: Int, val duplicateCount: Int)
+data class ImportOutcome(
+    val insertedCount: Int,
+    val translationsAddedCount: Int,
+    val duplicateCount: Int
+)
 
 /**
  * ذخیره‌سازی مشترک برای هر جریانی که یک لیست ParsedVocabularyEntry تولید می‌کند
- * (Paste Text و Import File — بند 42 و 43). هر رکورد یک Concept جدید با LearningState
- * اولیه DAILY می‌شود.
+ * (Paste Text و Import File — بند 42 و 43).
  *
- * بند 64 (Edge Case «Import ناقص»): هر ردیف کاملاً مستقل از بقیه است. اگر یک ردیف به هر
- * دلیلی (مثلاً محدودیت طول متن) درج نشود، بقیه ردیف‌های موفق نباید از دست بروند و کل
- * عملیات نباید Exception پرتاب کند و برنامه را Crash کند؛ فقط همان ردیف Skip می‌شود.
+ * بند 64 (Edge Case «Import ناقص»): هر ردیف کاملاً مستقل از بقیه است؛ خطای یک ردیف بقیه
+ * را متوقف نمی‌کند و کل عملیات Crash نمی‌کند.
  *
- * تشخیص تکراری (رفع باگ): قبلاً هیچ بررسی Duplicate‌ای انجام نمی‌شد، پس اگر کاربر یک
- * گروه کلمه را چندبار Paste/Import می‌کرد (مثلاً یک متن یکسان را دوبار Copy می‌کرد)،
- * همان کلمه چندبار به‌عنوان Concept جدا اضافه می‌شد. حالا هر متن مبدأ (نرمال‌شده با
- * Trim + lower-case) هم در برابر دیتابیس فعلی (existsByText) و هم درون همین دسته Import
- * فعلی (با یک Set محلی، چون خود دیتابیس تا پایان تراکنش این دسته از قبلی‌های همین دسته
- * خبر ندارد) بررسی می‌شود.
+ * بند 64 (رفع باگ «کلمه با چند معنی»): یک کلمه می‌تواند چند معنی/ترجمه متفاوت داشته باشد
+ * (مثلاً «banco» هم «نیمکت» هم «بانک»). وقتی متن مبدأ یک ردیف با یک Concept فعال موجود
+ * یکی باشد:
+ *   - اگر همان معنی (متن مقصد) از قبل روی همان Concept ثبت شده → تکراری واقعی، Skip.
+ *   - اگر معنی متفاوتی باشد → به‌عنوان یک معنی جدید به همان Concept اضافه می‌شود، نه
+ *     یک Concept جدید و جدا.
+ * چون هر ردیف قبل از رفتن به ردیف بعدی کامل commit می‌شود، خود دیتابیس مرجع تشخیص
+ * تکراری/چندمعنایی درون همین دسته Import هم هست؛ نیازی به نگه‌داشتن جدا یک Set در حافظه نیست.
  */
 class ImportParsedEntriesUseCase @Inject constructor(
     private val conceptRepository: ConceptRepository,
@@ -44,21 +50,29 @@ class ImportParsedEntriesUseCase @Inject constructor(
     ): ImportOutcome {
         val now = DateTimeUtils.now()
         var insertedCount = 0
+        var translationsAddedCount = 0
         var duplicateCount = 0
-        val seenInThisBatch = HashSet<String>()
 
         for (entry in entries) {
             if (entry.sourceText.isBlank() || entry.targetText.isBlank()) continue
 
-            val normalizedSource = entry.sourceText.trim().lowercase()
+            val sourceText = entry.sourceText.trim()
+            val targetText = entry.targetText.trim()
 
             try {
-                val isDuplicateInBatch = !seenInThisBatch.add(normalizedSource)
-                val isDuplicateInDb = !isDuplicateInBatch &&
-                    conceptRepository.existsByText(sourceLanguage, normalizedSource)
+                val existingConceptId = conceptRepository.findActiveConceptIdByText(sourceLanguage, sourceText)
 
-                if (isDuplicateInBatch || isDuplicateInDb) {
-                    duplicateCount++
+                if (existingConceptId != null) {
+                    val alreadyHasThisMeaning = conceptRepository.hasTranslation(existingConceptId, targetLanguage, targetText)
+                    if (alreadyHasThisMeaning) {
+                        duplicateCount++
+                    } else {
+                        conceptRepository.addTranslation(
+                            existingConceptId,
+                            ContentItem(languageCode = targetLanguage, text = targetText)
+                        )
+                        translationsAddedCount++
+                    }
                     continue
                 }
 
@@ -73,8 +87,8 @@ class ImportParsedEntriesUseCase @Inject constructor(
                     updatedAt = now,
                     notes = entry.extraLabel,
                     contents = listOf(
-                        ContentItem(languageCode = sourceLanguage, text = entry.sourceText.trim()),
-                        ContentItem(languageCode = targetLanguage, text = entry.targetText.trim())
+                        ContentItem(languageCode = sourceLanguage, text = sourceText),
+                        ContentItem(languageCode = targetLanguage, text = targetText)
                     ),
                     tags = emptyList()
                 )
@@ -86,6 +100,10 @@ class ImportParsedEntriesUseCase @Inject constructor(
             }
         }
 
-        return ImportOutcome(insertedCount = insertedCount, duplicateCount = duplicateCount)
+        return ImportOutcome(
+            insertedCount = insertedCount,
+            translationsAddedCount = translationsAddedCount,
+            duplicateCount = duplicateCount
+        )
     }
 }

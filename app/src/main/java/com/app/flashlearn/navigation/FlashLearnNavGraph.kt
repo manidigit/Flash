@@ -51,7 +51,9 @@ fun FlashLearnNavGraph(
 
         composable(Routes.REVIEW_TYPE_SELECT) {
             ReviewTypeSelectScreen(
-                onStart = { type, categoryId -> navController.navigate(Routes.reviewSession(type, categoryId)) }
+                onStart = { type, categoryId, mode ->
+                    navController.navigate(Routes.reviewSession(type, categoryId, mode))
+                }
             )
         }
 
@@ -59,7 +61,8 @@ fun FlashLearnNavGraph(
             route = Routes.REVIEW_SESSION,
             arguments = listOf(
                 navArgument("reviewType") { type = NavType.StringType },
-                navArgument("categoryId") { type = NavType.StringType; defaultValue = "" }
+                navArgument("categoryId") { type = NavType.StringType; defaultValue = "" },
+                navArgument("reviewMode") { type = NavType.StringType; defaultValue = "FLASHCARD" }
             )
         ) { backStackEntry ->
             val reviewType = backStackEntry.arguments?.getString("reviewType") ?: LearningStage.DAILY.name

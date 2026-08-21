@@ -118,6 +118,32 @@ class AddAIViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = state.copy(isSaving = true)
             val now = DateTimeUtils.now()
+            val sourceText = state.sourceText.trim()
+            val targetText = state.editedTranslation.trim()
+
+            // بند 64 (رفع باگ «کلمه با چند معنی»): همان منطق ادغام Manual/Import اینجا هم
+            // اعمال می‌شود تا ترجمه AI برای یک کلمه از قبل موجود، Concept تکراری نسازد.
+            val existingConceptId = conceptRepository.findActiveConceptIdByText(state.sourceLanguage, sourceText)
+            if (existingConceptId != null) {
+                val alreadyHasThisMeaning = conceptRepository.hasTranslation(existingConceptId, state.targetLanguage, targetText)
+                if (!alreadyHasThisMeaning) {
+                    conceptRepository.addTranslation(
+                        existingConceptId,
+                        ContentItem(
+                            languageCode = state.targetLanguage,
+                            text = targetText,
+                            definition = state.suggestion?.definition,
+                            example = state.editedExample.ifBlank { null }
+                        )
+                    )
+                }
+                _uiState.value = AddAiUiState(
+                    sourceLanguage = state.sourceLanguage,
+                    targetLanguage = state.targetLanguage,
+                    saved = true
+                )
+                return@launch
+            }
 
             val concept = Concept(
                 id = 0,
@@ -132,13 +158,13 @@ class AddAIViewModel @Inject constructor(
                 contents = listOf(
                     ContentItem(
                         languageCode = state.sourceLanguage,
-                        text = state.sourceText.trim(),
+                        text = sourceText,
                         pronunciation = state.editedPronunciation.ifBlank { null },
                         example = state.editedExample.ifBlank { null }
                     ),
                     ContentItem(
                         languageCode = state.targetLanguage,
-                        text = state.editedTranslation.trim(),
+                        text = targetText,
                         definition = state.suggestion?.definition,
                         example = state.editedExample.ifBlank { null }
                     )

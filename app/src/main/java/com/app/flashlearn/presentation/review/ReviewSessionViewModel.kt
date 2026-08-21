@@ -8,6 +8,7 @@ import com.app.flashlearn.domain.model.Concept
 import com.app.flashlearn.domain.model.Difficulty
 import com.app.flashlearn.domain.model.LearningStage
 import com.app.flashlearn.domain.model.LearningState
+import com.app.flashlearn.domain.model.ReviewMode
 import com.app.flashlearn.domain.repository.ConceptRepository
 import com.app.flashlearn.domain.repository.LanguagePairRepository
 import com.app.flashlearn.domain.repository.LearningStateRepository
@@ -33,7 +34,10 @@ data class ReviewSessionUiState(
     val isLoading: Boolean = true,
     val isFinished: Boolean = false,
     val sourceLanguage: String = "es",
-    val targetLanguage: String = "fa"
+    val targetLanguage: String = "fa",
+    val reviewMode: ReviewMode = ReviewMode.FLASHCARD,
+    val choiceOptions: List<String> = emptyList(),
+    val isLoadingChoices: Boolean = false
 ) {
     val currentConcept: Concept?
         get() = queue.getOrNull(currentIndex)
@@ -45,6 +49,11 @@ data class ReviewSessionUiState(
 /**
  * منطق کامل یک جلسه مرور: گرفتن کارت‌های آماده (طبق due-date)، پردازش هر پاسخ با
  * ProcessReviewAnswerUseCase، ذخیره LearningState جدید، و ثبت ReviewHistory (بند 32-35 و 65).
+ *
+ * ویژگی جدید (تست چهارگزینه‌ای): وقتی reviewMode == MULTIPLE_CHOICE است، به‌جای Flip
+ * کردن کارت، برای هر کلمه چند گزینه ترجمه (یکی درست، بقیه از کلمات دیگر کتابخانه به‌صورت
+ * تصادفی) ساخته می‌شود؛ انتخاب گزینه درست/غلط دقیقاً همان مسیر answer(isCorrect) موجود را
+ * صدا می‌زند، پس الگوریتم مرور (بند 32-35) بدون تغییر برای هر دو حالت کار می‌کند.
  */
 @HiltViewModel
 class ReviewSessionViewModel @Inject constructor(
@@ -59,8 +68,12 @@ class ReviewSessionViewModel @Inject constructor(
 
     private val reviewType: String = savedStateHandle.get<String>("reviewType") ?: "DAILY"
     private val categoryId: Long? = savedStateHandle.get<String>("categoryId")?.toLongOrNull()
+    private val reviewMode: ReviewMode = when (savedStateHandle.get<String>("reviewMode")) {
+        ReviewMode.MULTIPLE_CHOICE.name -> ReviewMode.MULTIPLE_CHOICE
+        else -> ReviewMode.FLASHCARD
+    }
 
-    private val _uiState = MutableStateFlow(ReviewSessionUiState())
+    private val _uiState = MutableStateFlow(ReviewSessionUiState(reviewMode = reviewMode))
     val uiState: StateFlow<ReviewSessionUiState> = _uiState.asStateFlow()
 
     private var sessionId: String? = null
@@ -91,13 +104,20 @@ class ReviewSessionViewModel @Inject constructor(
             sessionId = reviewSessionRepository.startSession(reviewType, now)
             lastCardShownAt = DateTimeUtils.now()
 
+            val sourceLanguage = activePair?.sourceLanguage ?: "es"
+            val targetLanguage = activePair?.targetLanguage ?: "fa"
+
             _uiState.value = _uiState.value.copy(
                 queue = concepts,
                 isLoading = false,
                 isFinished = concepts.isEmpty(),
-                sourceLanguage = activePair?.sourceLanguage ?: "es",
-                targetLanguage = activePair?.targetLanguage ?: "fa"
+                sourceLanguage = sourceLanguage,
+                targetLanguage = targetLanguage
             )
+
+            if (reviewMode == ReviewMode.MULTIPLE_CHOICE) {
+                loadChoiceOptionsForCurrent(targetLanguage)
+            }
         }
     }
 
@@ -113,6 +133,55 @@ class ReviewSessionViewModel @Inject constructor(
 
     fun flipCard() {
         _uiState.value = _uiState.value.copy(isFlipped = !_uiState.value.isFlipped)
+    }
+
+    /**
+     * ساخت گزینه‌های تست چهارگزینه‌ای برای کارت فعلی: یک گزینه درست (اولین ترجمه معتبر
+     * در زبان مقصد) به‌همراه حداکثر ۳ گزینه غلط تصادفی از کلمات دیگر. اگر کتابخانه آن‌قدر
+     * کوچک باشد که ۳ گزینه غلط متمایز پیدا نشود (مثلاً تازه چند کلمه اضافه شده)، همان
+     * تعداد کمتر نمایش داده می‌شود؛ بهتر از این است که برنامه Crash کند یا گزینه تکراری
+     * نشان بدهد.
+     */
+    private suspend fun loadChoiceOptionsForCurrent(targetLanguage: String) {
+        val concept = _uiState.value.currentConcept
+        if (concept == null) {
+            _uiState.value = _uiState.value.copy(choiceOptions = emptyList(), isLoadingChoices = false)
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(isLoadingChoices = true)
+
+        val correctText = concept.contentFor(targetLanguage)?.text
+        if (correctText.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(choiceOptions = emptyList(), isLoadingChoices = false)
+            return
+        }
+
+        val validMeanings = concept.contentsFor(targetLanguage).map { it.text.trim().lowercase() }.toSet()
+        val rawDistractors = conceptRepository.getRandomTranslations(
+            languageCode = targetLanguage,
+            excludeConceptId = concept.id,
+            limit = 8
+        )
+        val distractors = rawDistractors
+            .filter { it.trim().lowercase() !in validMeanings }
+            .distinctBy { it.trim().lowercase() }
+            .take(3)
+
+        val options = (distractors + correctText).shuffled()
+        _uiState.value = _uiState.value.copy(choiceOptions = options, isLoadingChoices = false)
+    }
+
+    /**
+     * انتخاب یک گزینه در حالت تست چهارگزینه‌ای. اگر انتخاب کاربر با هرکدام از معنی‌های
+     * معتبر این کلمه یکی باشد (بند 64: یک کلمه می‌تواند چند معنی داشته باشد)، پاسخ درست
+     * محسوب می‌شود.
+     */
+    fun selectChoice(selectedText: String) {
+        val concept = _uiState.value.currentConcept ?: return
+        val validMeanings = concept.contentsFor(_uiState.value.targetLanguage).map { it.text.trim().lowercase() }
+        val isCorrect = selectedText.trim().lowercase() in validMeanings
+        answer(isCorrect)
     }
 
     fun answer(isCorrect: Boolean) {
@@ -136,17 +205,21 @@ class ReviewSessionViewModel @Inject constructor(
 
             val nextIndex = state.currentIndex + 1
             lastCardShownAt = DateTimeUtils.now()
+            val isFinished = nextIndex >= state.queue.size
 
             _uiState.value = state.copy(
                 currentIndex = nextIndex,
                 correctCount = state.correctCount + if (isCorrect) 1 else 0,
                 wrongCount = state.wrongCount + if (!isCorrect) 1 else 0,
                 isFlipped = false,
-                isFinished = nextIndex >= state.queue.size
+                isFinished = isFinished,
+                choiceOptions = emptyList()
             )
 
-            if (_uiState.value.isFinished) {
+            if (isFinished) {
                 sessionId?.let { reviewSessionRepository.endSession(it, DateTimeUtils.now()) }
+            } else if (reviewMode == ReviewMode.MULTIPLE_CHOICE) {
+                loadChoiceOptionsForCurrent(state.targetLanguage)
             }
         }
     }

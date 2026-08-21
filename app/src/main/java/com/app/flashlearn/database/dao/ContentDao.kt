@@ -42,6 +42,52 @@ interface ContentDao {
     )
     suspend fun countActiveByText(languageCode: String, text: String): Int
 
+    /**
+     * پیدا کردن Concept فعالی که همین متن را در این زبان دارد (برای ادغام معنی جدید در
+     * یک کلمه موجود به‌جای ساخت Concept تکراری - بند 64). اگر چند Concept با همین متن
+     * پیدا شد (که نباید طبیعتاً پیش بیاید)، اولین مورد در نظر گرفته می‌شود.
+     */
+    @Query(
+        """
+        SELECT co.id FROM contents c
+        INNER JOIN concepts co ON co.id = c.conceptId
+        WHERE co.active = 1
+          AND c.languageCode = :languageCode
+          AND LOWER(TRIM(c.text)) = LOWER(TRIM(:text))
+        LIMIT 1
+        """
+    )
+    suspend fun findActiveConceptIdByText(languageCode: String, text: String): Long?
+
+    /**
+     * آیا این Concept از قبل دقیقاً همین معنی/ترجمه را در این زبان دارد؟ برای تشخیص
+     * ادغام معنی جدید (بند 64) در برابر یک معنی کاملاً تکراری روی همان کلمه.
+     */
+    @Query(
+        """
+        SELECT COUNT(*) FROM contents
+        WHERE conceptId = :conceptId
+          AND languageCode = :languageCode
+          AND LOWER(TRIM(text)) = LOWER(TRIM(:text))
+        """
+    )
+    suspend fun countByConceptLanguageText(conceptId: Long, languageCode: String, text: String): Int
+
     @Query("DELETE FROM contents WHERE conceptId = :conceptId")
     suspend fun deleteAllForConcept(conceptId: Long)
+
+    /**
+     * برای ساخت گزینه‌های غلط (Distractor) در حالت تست چهارگزینه‌ای مرور (ویژگی جدید):
+     * چند متن تصادفی از همین زبان مقصد که متعلق به Concept فعلی نیستند. DISTINCT برای
+     * جلوگیری از تکرار یک متن در چند گزینه.
+     */
+    @Query(
+        """
+        SELECT DISTINCT text FROM contents
+        WHERE languageCode = :languageCode AND conceptId != :excludeConceptId
+        ORDER BY RANDOM()
+        LIMIT :limit
+        """
+    )
+    suspend fun getRandomTexts(languageCode: String, excludeConceptId: Long, limit: Int): List<String>
 }

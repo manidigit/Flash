@@ -15,4 +15,11 @@ data class Concept(
 ) {
     fun contentFor(languageCode: String): ContentItem? =
         contents.firstOrNull { it.languageCode == languageCode }
+
+    /**
+     * همه معنی‌ها/ترجمه‌های این Concept در یک زبان (بند 64: یک کلمه می‌تواند چند معنی
+     * داشته باشد؛ مثلاً «banco» هم «نیمکت» هم «بانک»). برای نمایش کامل در فلش‌کارت.
+     */
+    fun contentsFor(languageCode: String): List<ContentItem> =
+        contents.filter { it.languageCode == languageCode }
 }

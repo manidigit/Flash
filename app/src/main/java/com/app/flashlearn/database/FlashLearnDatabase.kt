@@ -43,7 +43,7 @@ import com.app.flashlearn.database.entity.TagEntity
         LanguagePairEntity::class,
         AppSettingsEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class FlashLearnDatabase : RoomDatabase() {

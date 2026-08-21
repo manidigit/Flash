@@ -22,7 +22,7 @@
     <string name="onboarding_start">شروع کنید</string>
 
     <!-- Common actions (بین چند صفحه مشترک) -->
-    <string name="add_import_result_with_duplicates">%1$d مورد اضافه شد، %2$d مورد تکراری بود و اضافه نشد</string>
+    <string name="add_import_result_full">%1$d کلمه جدید اضافه شد، %2$d معنی جدید به کلمات قبلی اضافه شد، %3$d مورد کاملاً تکراری بود</string>
     <string name="action_add">افزودن</string>
     <string name="action_cancel">لغو</string>
     <string name="action_confirm">تأیید</string>
@@ -86,6 +86,9 @@
     <string name="add_import_file_import_error">Import متوقف شد: %1$s</string>
 
     <!-- Review Type Select -->
+    <string name="review_mode_section_title">حالت مرور</string>
+    <string name="review_mode_flashcard">کارت</string>
+    <string name="review_mode_multiple_choice">چهارگزینه‌ای</string>
     <string name="review_type_random">مرور تصادفی</string>
     <string name="review_type_daily">روزانه</string>
     <string name="review_type_weekly">هفتگی</string>
@@ -101,6 +104,7 @@
 
     <!-- Review Session -->
     <string name="review_session_exit">خروج از مرور</string>
+    <string name="review_session_choice_prompt">گزینه درست را انتخاب کنید</string>
     <string name="review_session_correct_wrong_counter">✅ %1$d   ❌ %2$d</string>
     <string name="review_session_tap_to_reveal">برای دیدن پاسخ لمس کنید</string>
     <string name="review_session_show_answer">نمایش پاسخ</string>

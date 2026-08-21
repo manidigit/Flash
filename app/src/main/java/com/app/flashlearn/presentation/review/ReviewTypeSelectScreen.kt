@@ -1,6 +1,7 @@
 package com.app.flashlearn.presentation.review
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,22 +15,28 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.flashlearn.R
+import com.app.flashlearn.domain.model.ReviewMode
 import com.app.flashlearn.ui.theme.Spacing
 
 /**
- * انتخاب نوع مرور (بند 29 و 52) به‌همراه فیلتر Category (بند 30: ترکیب فیلترها).
- * onStart با (نوع مرور، Category انتخابی یا null) صدا زده می‌شود.
+ * انتخاب نوع مرور (بند 29 و 52) به‌همراه فیلتر Category (بند 30) و حالت نمایش (ویژگی جدید:
+ * کارت کلاسیک یا تست چهارگزینه‌ای). onStart با (نوع مرور، Category انتخابی یا null، نام
+ * ReviewMode) صدا زده می‌شود.
  */
 @Composable
 fun ReviewTypeSelectScreen(
-    onStart: (String, Long?) -> Unit,
+    onStart: (String, Long?, String) -> Unit,
     viewModel: ReviewTypeSelectViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    var selectedMode by remember { mutableStateOf(ReviewMode.FLASHCARD) }
 
     val types = listOf(
         "RANDOM" to stringResource(R.string.review_type_random),
@@ -49,6 +56,22 @@ fun ReviewTypeSelectScreen(
             .padding(Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
     ) {
+        item { Text(stringResource(R.string.review_mode_section_title), style = MaterialTheme.typography.titleMedium) }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                FilterChip(
+                    selected = selectedMode == ReviewMode.FLASHCARD,
+                    onClick = { selectedMode = ReviewMode.FLASHCARD },
+                    label = { Text(stringResource(R.string.review_mode_flashcard)) }
+                )
+                FilterChip(
+                    selected = selectedMode == ReviewMode.MULTIPLE_CHOICE,
+                    onClick = { selectedMode = ReviewMode.MULTIPLE_CHOICE },
+                    label = { Text(stringResource(R.string.review_mode_multiple_choice)) }
+                )
+            }
+        }
+
         if (state.categories.isNotEmpty()) {
             item {
                 Text(stringResource(R.string.review_type_filter_by_category), style = MaterialTheme.typography.titleMedium)
@@ -75,11 +98,12 @@ fun ReviewTypeSelectScreen(
                     }
                 }
             }
-            item { Text(stringResource(R.string.review_type_section_title), style = MaterialTheme.typography.titleMedium) }
         }
 
+        item { Text(stringResource(R.string.review_type_section_title), style = MaterialTheme.typography.titleMedium) }
+
         items(types) { (type, label) ->
-            Card(onClick = { onStart(type, state.selectedCategoryId) }) {
+            Card(onClick = { onStart(type, state.selectedCategoryId, selectedMode.name) }) {
                 Text(
                     text = label,
                     modifier = Modifier.fillMaxWidth().padding(Spacing.md),

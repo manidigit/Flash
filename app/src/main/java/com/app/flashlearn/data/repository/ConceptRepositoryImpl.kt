@@ -8,6 +8,7 @@ import com.app.flashlearn.database.dao.TagDao
 import com.app.flashlearn.database.entity.ConceptTagEntity
 import com.app.flashlearn.database.entity.TagEntity
 import com.app.flashlearn.domain.model.Concept
+import com.app.flashlearn.domain.model.ContentItem
 import com.app.flashlearn.domain.model.VocabularySortOrder
 import com.app.flashlearn.domain.repository.ConceptRepository
 import kotlinx.coroutines.flow.Flow
@@ -56,6 +57,19 @@ class ConceptRepositoryImpl @Inject constructor(
 
     override suspend fun existsByText(languageCode: String, text: String): Boolean =
         contentDao.countActiveByText(languageCode, text) > 0
+
+    override suspend fun findActiveConceptIdByText(languageCode: String, text: String): Long? =
+        contentDao.findActiveConceptIdByText(languageCode, text)
+
+    override suspend fun addTranslation(conceptId: Long, content: ContentItem) {
+        contentDao.insert(content.toEntity(conceptId))
+    }
+
+    override suspend fun hasTranslation(conceptId: Long, languageCode: String, text: String): Boolean =
+        contentDao.countByConceptLanguageText(conceptId, languageCode, text) > 0
+
+    override suspend fun getRandomTranslations(languageCode: String, excludeConceptId: Long, limit: Int): List<String> =
+        contentDao.getRandomTexts(languageCode, excludeConceptId, limit)
 
     override suspend fun getPage(
         limit: Int,

@@ -6,7 +6,7 @@ object Routes {
 
     const val HOME = "home"
     const val REVIEW_TYPE_SELECT = "review_type_select"
-    const val REVIEW_SESSION = "review_session/{reviewType}?categoryId={categoryId}"
+    const val REVIEW_SESSION = "review_session/{reviewType}?categoryId={categoryId}&reviewMode={reviewMode}"
     const val VOCABULARY_LIST = "vocabulary_list"
     const val CONCEPT_DETAIL = "concept_detail/{conceptId}"
     const val ADD_HOME = "add_home"
@@ -19,9 +19,9 @@ object Routes {
     const val AI_SETTINGS = "ai_settings"
     const val STATISTICS = "statistics"
 
-    fun reviewSession(reviewType: String, categoryId: Long? = null): String {
-        val base = "review_session/$reviewType"
-        return if (categoryId != null) "$base?categoryId=$categoryId" else base
+    fun reviewSession(reviewType: String, categoryId: Long? = null, reviewMode: String = "FLASHCARD"): String {
+        val base = "review_session/$reviewType?reviewMode=$reviewMode"
+        return if (categoryId != null) "$base&categoryId=$categoryId" else base
     }
     fun conceptDetail(conceptId: Long) = "concept_detail/$conceptId"
 }

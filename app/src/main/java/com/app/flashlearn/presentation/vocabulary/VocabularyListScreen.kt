@@ -171,7 +171,11 @@ private fun VocabularyRow(
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = concept.contentFor(targetLanguage)?.text ?: "—",
+                    // بند 64: اگر کلمه چند معنی داشته باشد، همه با «، » جدا نمایش داده می‌شوند.
+                    text = concept.contentsFor(targetLanguage)
+                        .takeIf { it.isNotEmpty() }
+                        ?.joinToString("، ") { it.text }
+                        ?: "—",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

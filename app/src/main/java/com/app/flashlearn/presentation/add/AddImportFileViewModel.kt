@@ -25,7 +25,8 @@ data class AddImportFileUiState(
     val errorMessage: UiText? = null,
     val isImporting: Boolean = false,
     val importedCount: Int? = null,
-    val duplicateCount: Int = 0
+    val duplicateCount: Int = 0,
+    val translationsAddedCount: Int = 0
 ) {
     val includedCount: Int get() = entries.count { it.included }
 }
@@ -106,7 +107,8 @@ class AddImportFileViewModel @Inject constructor(
                     sourceLanguage = state.sourceLanguage,
                     targetLanguage = state.targetLanguage,
                     importedCount = outcome.insertedCount,
-                    duplicateCount = outcome.duplicateCount
+                    duplicateCount = outcome.duplicateCount,
+                    translationsAddedCount = outcome.translationsAddedCount
                 )
             } catch (e: Exception) {
                 _uiState.value = state.copy(
