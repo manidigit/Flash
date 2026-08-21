@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -140,22 +141,39 @@ fun AddImportFileScreen(
 
 @Composable
 private fun ImportPreviewRow(entry: ParsedVocabularyEntry, onToggle: () -> Unit, onRemove: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(checked = entry.included, onCheckedChange = { onToggle() })
-            Column(modifier = Modifier.weight(1f)) {
-                Text(entry.sourceText, style = MaterialTheme.typography.bodyLarge)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = if (entry.scriptMismatch) {
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        } else {
+            CardDefaults.cardColors()
+        }
+    ) {
+        Column(modifier = Modifier.padding(Spacing.sm)) {
+            if (entry.scriptMismatch) {
                 Text(
-                    entry.targetText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = stringResource(R.string.add_paste_script_mismatch_warning),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(bottom = Spacing.xs)
                 )
             }
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(checked = entry.included, onCheckedChange = { onToggle() })
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(entry.sourceText, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        entry.targetText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
+                }
             }
         }
     }

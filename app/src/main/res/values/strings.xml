@@ -72,6 +72,7 @@
     <string name="add_paste_importing">در حال Import...</string>
     <string name="add_paste_import_all_button">Import همه (%1$d)</string>
     <string name="add_paste_import_error">Import متوقف شد: %1$s</string>
+    <string name="add_paste_script_mismatch_warning">⚠ ممکن است این ردیف اشتباه تشخیص داده شده باشد (الفبا با زبان انتخاب‌شده همخوانی ندارد)</string>
 
     <!-- Add Import File -->
     <string name="add_import_file_title">Import از فایل</string>

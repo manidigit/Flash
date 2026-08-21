@@ -3,6 +3,7 @@ package com.app.flashlearn.presentation.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.R
+import com.app.flashlearn.core.util.ScriptDetector
 import com.app.flashlearn.core.util.UiText
 import com.app.flashlearn.domain.model.ParsedVocabularyEntry
 import com.app.flashlearn.domain.repository.LanguagePairRepository
@@ -58,10 +59,17 @@ class AddImportFileViewModel @Inject constructor(
 
     fun onFilePicked(fileName: String, content: String) {
         try {
-            val entries = if (fileName.endsWith(".json", ignoreCase = true)) {
+            val state = _uiState.value
+            val rawEntries = if (fileName.endsWith(".json", ignoreCase = true)) {
                 parseJson(content)
             } else {
                 parseCsv(content)
+            }
+            // بند 64: همان هشدار عدم‌تطابق الفبا که در Paste Text است، اینجا هم اعمال می‌شود.
+            val entries = rawEntries.map { entry ->
+                val mismatch = ScriptDetector.likelyScriptMismatch(state.sourceLanguage, entry.sourceText) ||
+                    ScriptDetector.likelyScriptMismatch(state.targetLanguage, entry.targetText)
+                entry.copy(scriptMismatch = mismatch, included = !mismatch)
             }
 
             if (entries.isEmpty()) {

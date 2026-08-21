@@ -3,6 +3,7 @@ package com.app.flashlearn.presentation.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.R
+import com.app.flashlearn.core.util.ScriptDetector
 import com.app.flashlearn.core.util.UiText
 import com.app.flashlearn.domain.model.ParsedVocabularyEntry
 import com.app.flashlearn.domain.repository.LanguagePairRepository
@@ -55,12 +56,27 @@ class AddPasteTextViewModel @Inject constructor(
     }
 
     fun onRawTextChanged(value: String) {
-        _uiState.value = _uiState.value.copy(rawText = value)
+        // رفع سردرگمی: اگر پیش‌نمایش قبلی وجود داشت و کاربر متن را عوض کرد، آن پیش‌نمایش
+        // دیگر با متن فعلی مطابقت ندارد و باید پاک شود تا نتایج قدیمی و گمراه‌کننده نماند.
+        val shouldClearStalePreview = _uiState.value.entries.isNotEmpty()
+        _uiState.value = _uiState.value.copy(
+            rawText = value,
+            entries = if (shouldClearStalePreview) emptyList() else _uiState.value.entries
+        )
     }
 
     fun parse() {
-        val entries = parsePasteText(_uiState.value.rawText)
-        _uiState.value = _uiState.value.copy(entries = entries, importedCount = null)
+        val state = _uiState.value
+        // بند 64 (رفع باگ): پارسر معنایی نیست و نمی‌تواند تشخیص دهد دو خط پشت‌سرهم واقعاً
+        // مبدأ/مقصد یک کلمه‌اند یا دو متن بی‌ربط؛ اما اگر الفبای یکی از دو طرف با زبان
+        // انتخاب‌شده همخوانی نداشته باشد (نشانه قوی پارس اشتباه)، آن ردیف را با هشدار
+        // مشخص می‌کنیم و پیش‌فرض از حالت انتخاب‌شده برای Import خارج می‌کنیم.
+        val entries = parsePasteText(state.rawText).map { entry ->
+            val mismatch = ScriptDetector.likelyScriptMismatch(state.sourceLanguage, entry.sourceText) ||
+                ScriptDetector.likelyScriptMismatch(state.targetLanguage, entry.targetText)
+            entry.copy(scriptMismatch = mismatch, included = !mismatch)
+        }
+        _uiState.value = state.copy(entries = entries, importedCount = null)
     }
 
     fun updateEntry(localId: Int, sourceText: String, targetText: String) {

@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -140,28 +141,45 @@ private fun EntryRow(
     onEdit: (String, String) -> Unit,
     onRemove: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(Spacing.sm),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-        ) {
-            Checkbox(checked = entry.included, onCheckedChange = { onToggle() })
-            Column(modifier = Modifier.weight(1f)) {
-                OutlinedTextField(
-                    value = entry.sourceText,
-                    onValueChange = { onEdit(it, entry.targetText) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = entry.targetText,
-                    onValueChange = { onEdit(entry.sourceText, it) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = if (entry.scriptMismatch) {
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        } else {
+            CardDefaults.cardColors()
+        }
+    ) {
+        Column(modifier = Modifier.padding(Spacing.sm)) {
+            if (entry.scriptMismatch) {
+                Text(
+                    text = stringResource(R.string.add_paste_script_mismatch_warning),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(bottom = Spacing.xs)
                 )
             }
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Checkbox(checked = entry.included, onCheckedChange = { onToggle() })
+                Column(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = entry.sourceText,
+                        onValueChange = { onEdit(it, entry.targetText) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = entry.targetText,
+                        onValueChange = { onEdit(entry.sourceText, it) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)
+                    )
+                }
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
+                }
             }
         }
     }
