@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -125,6 +126,8 @@ fun ReviewSessionScreen(
                             frontText = front.text,
                             options = state.choiceOptions,
                             isLoading = state.isLoadingChoices,
+                            selectedOption = state.selectedChoiceText,
+                            correctOptions = backs.map { it.text.trim().lowercase() }.toSet(),
                             onSelect = viewModel::selectChoice
                         )
                     }
@@ -184,14 +187,17 @@ fun ReviewSessionScreen(
 
 /**
  * تست چهارگزینه‌ای: متن مبدأ در یک کارت بزرگ بالا، و گزینه‌های ترجمه در یک Grid دو‌ستونه
- * پایین (شبیه اپ‌های رایج آموزش زبان). لمس هر گزینه بلافاصله پاسخ را ثبت می‌کند؛ نیازی به
- * دکمه تأیید جداگانه نیست چون نتیجه (درست/غلط) به‌خودی‌خود بازخورد کافی است.
+ * پایین (شبیه اپ‌های رایج آموزش زبان). بعد از انتخاب یک گزینه (رفع باگ: قبلاً بدون هیچ
+ * بازخوردی فوراً می‌رفت بعدی)، گزینه درست سبز و گزینه غلطِ انتخاب‌شده (اگر اشتباه بود)
+ * قرمز می‌شود؛ در همین حین همه گزینه‌ها غیرفعال می‌مانند تا رفتن خودکار به کارت بعدی.
  */
 @Composable
 private fun MultipleChoiceCard(
     frontText: String,
     options: List<String>,
     isLoading: Boolean,
+    selectedOption: String?,
+    correctOptions: Set<String>,
     onSelect: (String) -> Unit
 ) {
     Column(
@@ -225,15 +231,30 @@ private fun MultipleChoiceCard(
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
                     pair.forEach { option ->
+                        val isCorrectOption = option.trim().lowercase() in correctOptions
+                        val isSelectedOption = option == selectedOption
+                        val showFeedback = selectedOption != null
+                        val containerColor = when {
+                            showFeedback && isCorrectOption -> FlashLearnExtras.status.success
+                            showFeedback && isSelectedOption && !isCorrectOption -> MaterialTheme.colorScheme.error
+                            else -> CardDefaults.cardColors().containerColor
+                        }
                         Card(
                             onClick = { onSelect(option) },
-                            modifier = Modifier.weight(1f).height(96.dp)
+                            enabled = selectedOption == null,
+                            modifier = Modifier.weight(1f).height(96.dp),
+                            colors = CardDefaults.cardColors(containerColor = containerColor)
                         ) {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                 Text(
                                     text = option,
                                     modifier = Modifier.padding(Spacing.sm),
                                     style = MaterialTheme.typography.bodyLarge,
+                                    color = if (showFeedback && (isCorrectOption || isSelectedOption)) {
+                                        Color.White
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
                                     textAlign = TextAlign.Center
                                 )
                             }

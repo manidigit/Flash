@@ -18,6 +18,7 @@ import com.app.flashlearn.domain.usecase.ProcessReviewAnswerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +38,11 @@ data class ReviewSessionUiState(
     val targetLanguage: String = "fa",
     val reviewMode: ReviewMode = ReviewMode.FLASHCARD,
     val choiceOptions: List<String> = emptyList(),
-    val isLoadingChoices: Boolean = false
+    val isLoadingChoices: Boolean = false,
+    // بند: بعد از انتخاب یک گزینه در تست چهارگزینه‌ای، تا پایان تأخیر بازخورد (بلافاصله
+    // جواب پردازش نمی‌شود) این مقدار نگه داشته می‌شود تا UI بتواند گزینه انتخاب‌شده و
+    // گزینه درست را رنگ بزند، پیش از رفتن به کارت بعدی.
+    val selectedChoiceText: String? = null
 ) {
     val currentConcept: Concept?
         get() = queue.getOrNull(currentIndex)
@@ -65,6 +70,11 @@ class ReviewSessionViewModel @Inject constructor(
     private val languagePairRepository: LanguagePairRepository,
     private val processReviewAnswer: ProcessReviewAnswerUseCase
 ) : ViewModel() {
+
+    companion object {
+        // مدت زمان نمایش بازخورد رنگی (سبز/قرمز) قبل از رفتن به کارت بعدی در تست چهارگزینه‌ای.
+        private const val CHOICE_FEEDBACK_DELAY_MS = 2000L
+    }
 
     private val reviewType: String = savedStateHandle.get<String>("reviewType") ?: "DAILY"
     private val categoryId: Long? = savedStateHandle.get<String>("categoryId")?.toLongOrNull()
@@ -198,15 +208,26 @@ class ReviewSessionViewModel @Inject constructor(
     }
 
     /**
-     * انتخاب یک گزینه در حالت تست چهارگزینه‌ای. اگر انتخاب کاربر با هرکدام از معنی‌های
-     * معتبر این کلمه یکی باشد (بند 64: یک کلمه می‌تواند چند معنی داشته باشد)، پاسخ درست
-     * محسوب می‌شود.
+     * انتخاب یک گزینه در حالت تست چهارگزینه‌ای (رفع باگ: قبلاً بلافاصله و بدون هیچ بازخورد
+     * بصری به کارت بعدی می‌رفت). حالا اول فقط گزینه انتخاب‌شده در State ثبت می‌شود تا UI
+     * گزینه درست را سبز و گزینه غلط انتخاب‌شده را قرمز نشان دهد، و پردازش واقعی پاسخ
+     * (answer) با ۲ ثانیه تأخیر انجام می‌شود. تا وقتی این تأخیر تمام نشده، انتخاب دوباره
+     * نادیده گرفته می‌شود (در UI هم دکمه‌ها Disable می‌شوند) تا با تپ سریع دوباره، پاسخ دوبار
+     * ثبت نشود.
      */
     fun selectChoice(selectedText: String) {
-        val concept = _uiState.value.currentConcept ?: return
-        val validMeanings = concept.contentsFor(_uiState.value.targetLanguage).map { it.text.trim().lowercase() }
+        val state = _uiState.value
+        if (state.selectedChoiceText != null) return
+        val concept = state.currentConcept ?: return
+        val validMeanings = concept.contentsFor(state.targetLanguage).map { it.text.trim().lowercase() }
         val isCorrect = selectedText.trim().lowercase() in validMeanings
-        answer(isCorrect)
+
+        _uiState.value = state.copy(selectedChoiceText = selectedText)
+
+        viewModelScope.launch {
+            delay(CHOICE_FEEDBACK_DELAY_MS)
+            answer(isCorrect)
+        }
     }
 
     fun answer(isCorrect: Boolean) {
@@ -238,7 +259,8 @@ class ReviewSessionViewModel @Inject constructor(
                 wrongCount = state.wrongCount + if (!isCorrect) 1 else 0,
                 isFlipped = false,
                 isFinished = isFinished,
-                choiceOptions = emptyList()
+                choiceOptions = emptyList(),
+                selectedChoiceText = null
             )
 
             if (isFinished) {
