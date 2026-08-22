@@ -6,6 +6,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 
 private val LightColors = lightColorScheme(
     primary = PrimaryLight,
@@ -46,7 +48,13 @@ fun FlashLearnTheme(
         StatusColors(success = SuccessLight, warning = WarningLight, due = DueLight, learned = LearnedLight)
     }
 
-    CompositionLocalProvider(LocalStatusColors provides statusColors) {
+    CompositionLocalProvider(
+        LocalStatusColors provides statusColors,
+        // رفع باگ: جهت UI باید همیشه راست‌به‌چپ باشد چون تمام محتوای اپ فارسی است،
+        // مستقل از زبان سیستم گوشی (که ممکن است انگلیسی باشد و باعث چپ‌چین شدن منوها،
+        // آیکون‌ها، و ترتیب نمایش اعداد/کلمات لاتین وسط جمله فارسی می‌شد).
+        LocalLayoutDirection provides LayoutDirection.Rtl
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = FlashLearnTypography,

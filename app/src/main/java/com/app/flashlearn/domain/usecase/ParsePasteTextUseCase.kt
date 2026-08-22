@@ -21,15 +21,30 @@ import javax.inject.Inject
  * ### ۳۱. con una condición ...
  * به یک شرط ...
  *
- * حالت ۴ - متن مبدأ و ترجمه در همان خط با علامت "=" جدا شده‌اند (با یا بدون Bullet ابتدایی
- * مثل 🔷 یا *)، حتی چند مورد از این خط‌ها پشت‌سرهم بدون خط خالی بین‌شان:
+ * حالت ۴ - متن مبدأ و ترجمه در همان خط، جدا شده با "=" یا ":":
  * ponerse algo = چیزی پوشیدن
- * 🔷 algo espectacular = چیزی خیلی تماشایی / فوق‌العاده
+ * solíamos: (از soler) قبلاً می‌کردیم ...
  *
- * رفع باگ (نسخه قبل): علامت "=" اصلاً به‌عنوان جداکننده متن مبدأ/ترجمه تشخیص داده نمی‌شد و
- * چند خط «=»ای پشت‌سرهم بدون خط خالی، به‌اشتباه به‌عنوان یک ردیف چندخطی واحد (خط اول=مبدأ،
- * خط دوم=ترجمه) در نظر گرفته می‌شدند. حالا هر خطی که با الگوی «متن = ترجمه» مطابقت داشته
- * باشد، مستقل از خط‌های اطرافش، بلافاصله یک ردیف کامل در نظر گرفته می‌شود.
+ * حالت ۵ - یک کلمه به‌تنهایی (روی بلوک خودش)، و بعد از یک خط خالی، چند معنی جداگانه که
+ * هرکدام باید یک ترجمه مستقل برای همان کلمه شوند (نه یک توضیح واحد):
+ * quedar
+ *
+ * شدن / تبدیل شدن
+ * قرار گرفتن
+ * واقع شدن / واقع بودن
+ * ...
+ *
+ * رفع باگ (نسخه قبل):
+ * - علامت "=" و ":" اصلاً به‌عنوان جداکننده مبدأ/ترجمه تشخیص داده نمی‌شدند؛ این تشخیص فقط
+ *   وقتی خط قبلی هنوز معلق نمانده اعمال می‌شود، تا خط توضیحیِ چندخطی که تصادفاً ":" دارد
+ *   (مثلاً «فعل: apagar...») به‌اشتباه یک ردیف جدا شکافته نشود.
+ * - خط‌هایی که با نشانه Bullet شروع می‌شوند (مثل «* کلمات مشتق شده:») یا حاوی فلش
+ *   ارجاع دستوری‌اند (مثل «brille ← فعل brillar»)، به‌عنوان یادداشت اضافه (extraLabel) در
+ *   نظر گرفته می‌شوند، نه یک معنی مستقل.
+ * - وقتی یک کلمه به‌تنهایی در بلوک خودش می‌آید و بلوک بعدی چند خط معنی دارد، هرکدام از آن
+ *   خط‌ها یک ParsedVocabularyEntry جدا (با همان متن مبدأ) می‌شود؛ منطق ادغام موجود در
+ *   ImportParsedEntriesUseCase این چند ردیف را در واردسازی نهایی به یک Concept با چند
+ *   ترجمه تبدیل می‌کند.
  *
  * این یک Parser ساده و قطعی است (بدون AI)؛ نسخه هوشمندتر مبتنی بر AI به‌عنوان بهبود بعدی
  * ثبت شده (Gap شناخته‌شده).
@@ -42,12 +57,13 @@ class ParsePasteTextUseCase @Inject constructor() {
     private val leadingNumberPrefix = Regex("^[0-9۰-۹٠-٩]+[.)\\-]\\s*")
     private val bulletPrefix = Regex("^[\\s]*[•*\\-–—▪●○◦‣·🔷🔶🔹🔸]+\\s*")
     private val inlineEqualsLine = Regex("^(.+?)\\s*=\\s*(.+)$")
+    private val inlineColonLine = Regex("^(.+?):\\s*(.+)$")
+    private val noteArrowMarker = Regex("←|→|->|<-")
 
     operator fun invoke(rawText: String): List<ParsedVocabularyEntry> {
-        // مرز بلوک اجباری جلوی هر خط "### شماره ..." تا حالت ۳ هم مثل بقیه با خط خالی جدا شود.
         val normalizedText = headingEntryStart.replace(rawText) { match -> "\n\n" + match.value }
 
-        val blocks = normalizedText
+        val chunks = normalizedText
             .split(Regex("\\n\\s*\\n"))
             .map { block -> block.lines().map { it.trim() }.filter { it.isNotEmpty() } }
             .filter { it.isNotEmpty() }
@@ -55,39 +71,70 @@ class ParsePasteTextUseCase @Inject constructor() {
         var localId = 0
         val results = mutableListOf<ParsedVocabularyEntry>()
 
-        for (rawLines in blocks) {
-            val cleanedLines = cleanBlockLines(rawLines)
-            if (cleanedLines.isEmpty()) continue
+        fun addEntry(source: String, target: String, extra: String?) {
+            if (source.isNotBlank() && target.isNotBlank()) {
+                results.add(ParsedVocabularyEntry(localId++, source, target, extra))
+            }
+        }
 
+        // خط‌هایی که پس از حذف نشانه‌های تزئینی، معنی مستقل هستند از خط‌های یادداشت/توضیح
+        // (شروع با Bullet یا حاوی فلش ارجاع دستوری) جدا می‌شوند.
+        fun emitSourceWithMeanings(source: String, meaningAndNoteLines: List<String>) {
+            val meaningLines = mutableListOf<String>()
+            val noteLines = mutableListOf<String>()
+            for (line in meaningAndNoteLines) {
+                val isNote = noteArrowMarker.containsMatchIn(line) || bulletPrefix.find(line)?.range?.first == 0
+                if (isNote) noteLines.add(line) else meaningLines.add(line)
+            }
+            if (meaningLines.isEmpty()) return
+            val extra = noteLines.takeIf { it.isNotEmpty() }?.joinToString(" — ")
+            meaningLines.forEachIndexed { index, meaning ->
+                addEntry(source, meaning, if (index == 0) extra else null)
+            }
+        }
+
+        // اگر همان خط با "=" یا ":" یک جفت کامل مبدأ/ترجمه باشد، بلافاصله ثبت می‌شود.
+        fun tryInlinePair(line: String): Boolean {
+            val match = inlineEqualsLine.find(line) ?: inlineColonLine.find(line) ?: return false
+            val source = bulletPrefix.replace(match.groupValues[1], "").trim()
+            val target = match.groupValues[2].trim()
+            addEntry(source, target, null)
+            return true
+        }
+
+        fun processNormalChunk(cleanedLines: List<String>) {
             val pending = mutableListOf<String>()
-
-            fun flushPending() {
-                if (pending.size >= 2) {
-                    val source = pending[0]
-                    val target = pending[1]
-                    val extra = pending.drop(2).takeIf { it.isNotEmpty() }?.joinToString(" — ")
-                    if (source.isNotBlank() && target.isNotBlank()) {
-                        results.add(ParsedVocabularyEntry(localId++, source, target, extra))
-                    }
-                }
-                pending.clear()
-            }
-
             for (line in cleanedLines) {
-                val equalsMatch = inlineEqualsLine.find(line)
-                if (equalsMatch != null) {
-                    // این خط خودش یک ردیف کامل (متن = ترجمه) است؛ اول هر گروه چندخطی معلق را ببند.
-                    flushPending()
-                    val source = bulletPrefix.replace(equalsMatch.groupValues[1], "").trim()
-                    val target = equalsMatch.groupValues[2].trim()
-                    if (source.isNotBlank() && target.isNotBlank()) {
-                        results.add(ParsedVocabularyEntry(localId++, source, target, null))
-                    }
-                } else {
-                    pending.add(line)
-                }
+                val matchedInline = pending.isEmpty() && tryInlinePair(line)
+                if (!matchedInline) pending.add(line)
             }
-            flushPending()
+            if (pending.size >= 2) {
+                emitSourceWithMeanings(pending[0], pending.drop(1))
+            }
+        }
+
+        // کلمه‌ای که تنها در بلوک خودش آمده و منتظر بلوک بعدی (لیست معنی‌ها) است.
+        var pendingSourceOnly: String? = null
+
+        for (rawLines in chunks) {
+            val cleaned = cleanBlockLines(rawLines)
+            if (cleaned.isEmpty()) continue
+
+            val sourceOnly = pendingSourceOnly
+            if (sourceOnly != null) {
+                emitSourceWithMeanings(sourceOnly, cleaned)
+                pendingSourceOnly = null
+                continue
+            }
+
+            if (cleaned.size == 1) {
+                if (!tryInlinePair(cleaned[0])) {
+                    pendingSourceOnly = cleaned[0]
+                }
+                continue
+            }
+
+            processNormalChunk(cleaned)
         }
 
         return results
