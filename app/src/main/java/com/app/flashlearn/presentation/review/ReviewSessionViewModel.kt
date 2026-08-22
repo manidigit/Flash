@@ -98,7 +98,16 @@ class ReviewSessionViewModel @Inject constructor(
                 Difficulty.VERY_HARD.name -> conceptsForDifficulty(Difficulty.VERY_HARD)
                 "LEARNED" -> learningStateRepository.getLearned(limit = 50, offset = 0, categoryId = categoryId)
                     .mapNotNull { conceptRepository.getById(it.conceptId) }
-                else -> conceptRepository.getPage(limit = 30, offset = 0, categoryId = categoryId) // RANDOM
+                // بند 64 (رفع دو باگ):
+                // ۱) قبلاً از conceptRepository.getPage() استفاده می‌شد که کل کتابخانه را
+                //    به‌ترتیب ثابت (بدون توجه به nextReviewAt) برمی‌گرداند؛ یعنی کلماتی که
+                //    تازه به مرحله هفتگی/ماهانه رفته و هنوز موعد مرورشان نرسیده هم دوباره
+                //    نشان داده می‌شدند - دقیقاً برخلاف هدف Spaced Repetition.
+                // ۲) نتیجه هیچ‌وقت Shuffle نمی‌شد، پس هر بار دقیقاً همان ترتیب قبلی تکرار
+                //    می‌شد و اصلاً "تصادفی" نبود.
+                // اصلاح: فقط از بین کارت‌های واقعاً Due (در هر سه مرحله DAILY/WEEKLY/MONTHLY،
+                // به‌جز LEARNED که مرور آن اختیاری و جدا از این حالت است) به‌صورت Shuffle شده.
+                else -> loadRandomDueConcepts(now)
             }
 
             sessionId = reviewSessionRepository.startSession(reviewType, now)
@@ -124,6 +133,22 @@ class ReviewSessionViewModel @Inject constructor(
     private suspend fun dueConceptsFor(stage: LearningStage, now: Long): List<Concept> {
         val due = learningStateRepository.getDue(stage, now, limit = 50, categoryId = categoryId)
         return due.mapNotNull { conceptRepository.getById(it.conceptId) }
+    }
+
+    /**
+     * مرور تصادفی واقعی: کارت‌های Due در هر سه مرحله را جمع می‌کند، به‌هم می‌ریزد
+     * (Shuffle)، و حداکثر ۳۰ مورد اول را برمی‌گرداند. ترتیب هر بار متفاوت است چون
+     * shuffled() هر فراخوانی یک ترتیب تصادفی جدید تولید می‌کند.
+     */
+    private suspend fun loadRandomDueConcepts(now: Long): List<Concept> {
+        val dueStages = listOf(LearningStage.DAILY, LearningStage.WEEKLY, LearningStage.MONTHLY)
+        val allDueStates = dueStages.flatMap { stage ->
+            learningStateRepository.getDue(stage, now, limit = 50, categoryId = categoryId)
+        }
+        return allDueStates
+            .shuffled()
+            .take(30)
+            .mapNotNull { conceptRepository.getById(it.conceptId) }
     }
 
     private suspend fun conceptsForDifficulty(difficulty: Difficulty): List<Concept> {
