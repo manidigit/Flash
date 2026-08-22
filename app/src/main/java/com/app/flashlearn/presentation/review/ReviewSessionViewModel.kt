@@ -95,47 +95,57 @@ class ReviewSessionViewModel @Inject constructor(
 
     private fun loadQueue() {
         viewModelScope.launch {
-            val activePair = languagePairRepository.observeActivePair().first()
-            val now = DateTimeUtils.now()
+            // رفع باگ (Crash در مرور تصادفی): هر خطای غیرمنتظره‌ای اینجا (مثلاً یک ردیف
+            // ناسازگار در دیتابیس) قبلاً بدون هیچ try/catch مستقیم به بیرون از برنامه
+            // پرتاب می‌شد و کل اپ Force Close می‌شد. حالا چنین خطایی فقط باعث می‌شود
+            // صفحه با فهرست خالی («چیزی برای مرور نبود») بسته شود، نه Crash کامل برنامه.
+            try {
+                val activePair = languagePairRepository.observeActivePair().first()
+                val now = DateTimeUtils.now()
 
-            val concepts: List<Concept> = when (reviewType) {
-                LearningStage.DAILY.name -> dueConceptsFor(LearningStage.DAILY, now)
-                LearningStage.WEEKLY.name -> dueConceptsFor(LearningStage.WEEKLY, now)
-                LearningStage.MONTHLY.name -> dueConceptsFor(LearningStage.MONTHLY, now)
-                Difficulty.EASY.name -> conceptsForDifficulty(Difficulty.EASY)
-                Difficulty.MEDIUM.name -> conceptsForDifficulty(Difficulty.MEDIUM)
-                Difficulty.HARD.name -> conceptsForDifficulty(Difficulty.HARD)
-                Difficulty.VERY_HARD.name -> conceptsForDifficulty(Difficulty.VERY_HARD)
-                "LEARNED" -> learningStateRepository.getLearned(limit = 50, offset = 0, categoryId = categoryId)
-                    .mapNotNull { conceptRepository.getById(it.conceptId) }
-                // بند 64 (رفع دو باگ):
-                // ۱) قبلاً از conceptRepository.getPage() استفاده می‌شد که کل کتابخانه را
-                //    به‌ترتیب ثابت (بدون توجه به nextReviewAt) برمی‌گرداند؛ یعنی کلماتی که
-                //    تازه به مرحله هفتگی/ماهانه رفته و هنوز موعد مرورشان نرسیده هم دوباره
-                //    نشان داده می‌شدند - دقیقاً برخلاف هدف Spaced Repetition.
-                // ۲) نتیجه هیچ‌وقت Shuffle نمی‌شد، پس هر بار دقیقاً همان ترتیب قبلی تکرار
-                //    می‌شد و اصلاً "تصادفی" نبود.
-                // اصلاح: فقط از بین کارت‌های واقعاً Due (در هر سه مرحله DAILY/WEEKLY/MONTHLY،
-                // به‌جز LEARNED که مرور آن اختیاری و جدا از این حالت است) به‌صورت Shuffle شده.
-                else -> loadRandomDueConcepts(now)
-            }
+                val concepts: List<Concept> = when (reviewType) {
+                    LearningStage.DAILY.name -> dueConceptsFor(LearningStage.DAILY, now)
+                    LearningStage.WEEKLY.name -> dueConceptsFor(LearningStage.WEEKLY, now)
+                    LearningStage.MONTHLY.name -> dueConceptsFor(LearningStage.MONTHLY, now)
+                    Difficulty.EASY.name -> conceptsForDifficulty(Difficulty.EASY)
+                    Difficulty.MEDIUM.name -> conceptsForDifficulty(Difficulty.MEDIUM)
+                    Difficulty.HARD.name -> conceptsForDifficulty(Difficulty.HARD)
+                    Difficulty.VERY_HARD.name -> conceptsForDifficulty(Difficulty.VERY_HARD)
+                    "LEARNED" -> learningStateRepository.getLearned(limit = 50, offset = 0, categoryId = categoryId)
+                        .mapNotNull { conceptRepository.getById(it.conceptId) }
+                    // بند 64 (رفع دو باگ):
+                    // ۱) قبلاً از conceptRepository.getPage() استفاده می‌شد که کل کتابخانه
+                    //    را به‌ترتیب ثابت (بدون توجه به nextReviewAt) برمی‌گرداند؛ یعنی
+                    //    کلماتی که تازه به مرحله هفتگی/ماهانه رفته و هنوز موعد مرورشان
+                    //    نرسیده هم دوباره نشان داده می‌شدند - برخلاف هدف Spaced Repetition.
+                    // ۲) نتیجه هیچ‌وقت Shuffle نمی‌شد، پس هر بار دقیقاً همان ترتیب قبلی
+                    //    تکرار می‌شد و اصلاً "تصادفی" نبود.
+                    else -> loadRandomDueConcepts(now)
+                }
 
-            sessionId = reviewSessionRepository.startSession(reviewType, now)
-            lastCardShownAt = DateTimeUtils.now()
+                sessionId = reviewSessionRepository.startSession(reviewType, now)
+                lastCardShownAt = DateTimeUtils.now()
 
-            val sourceLanguage = activePair?.sourceLanguage ?: "es"
-            val targetLanguage = activePair?.targetLanguage ?: "fa"
+                val sourceLanguage = activePair?.sourceLanguage ?: "es"
+                val targetLanguage = activePair?.targetLanguage ?: "fa"
 
-            _uiState.value = _uiState.value.copy(
-                queue = concepts,
-                isLoading = false,
-                isFinished = concepts.isEmpty(),
-                sourceLanguage = sourceLanguage,
-                targetLanguage = targetLanguage
-            )
+                _uiState.value = _uiState.value.copy(
+                    queue = concepts,
+                    isLoading = false,
+                    isFinished = concepts.isEmpty(),
+                    sourceLanguage = sourceLanguage,
+                    targetLanguage = targetLanguage
+                )
 
-            if (reviewMode == ReviewMode.MULTIPLE_CHOICE) {
-                loadChoiceOptionsForCurrent(targetLanguage)
+                if (reviewMode == ReviewMode.MULTIPLE_CHOICE && concepts.isNotEmpty()) {
+                    loadChoiceOptionsForCurrent(targetLanguage)
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    queue = emptyList(),
+                    isLoading = false,
+                    isFinished = true
+                )
             }
         }
     }
@@ -186,25 +196,32 @@ class ReviewSessionViewModel @Inject constructor(
 
         _uiState.value = _uiState.value.copy(isLoadingChoices = true)
 
-        val correctText = concept.contentFor(targetLanguage)?.text
-        if (correctText.isNullOrBlank()) {
+        // رفع باگ Crash: اگر ساخت گزینه‌ها به هر دلیلی (مثلاً خطای دیتابیس) شکست بخورد،
+        // به‌جای پرتاب Exception و بستن کل برنامه، فقط این یک کارت بدون گزینه (خالی) رد
+        // می‌شود؛ کاربر می‌تواند با دکمه خروج از جلسه خارج شود، ولی برنامه Crash نمی‌کند.
+        try {
+            val correctText = concept.contentFor(targetLanguage)?.text
+            if (correctText.isNullOrBlank()) {
+                _uiState.value = _uiState.value.copy(choiceOptions = emptyList(), isLoadingChoices = false)
+                return
+            }
+
+            val validMeanings = concept.contentsFor(targetLanguage).map { it.text.trim().lowercase() }.toSet()
+            val rawDistractors = conceptRepository.getRandomTranslations(
+                languageCode = targetLanguage,
+                excludeConceptId = concept.id,
+                limit = 8
+            )
+            val distractors = rawDistractors
+                .filter { it.trim().lowercase() !in validMeanings }
+                .distinctBy { it.trim().lowercase() }
+                .take(3)
+
+            val options = (distractors + correctText).shuffled()
+            _uiState.value = _uiState.value.copy(choiceOptions = options, isLoadingChoices = false)
+        } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(choiceOptions = emptyList(), isLoadingChoices = false)
-            return
         }
-
-        val validMeanings = concept.contentsFor(targetLanguage).map { it.text.trim().lowercase() }.toSet()
-        val rawDistractors = conceptRepository.getRandomTranslations(
-            languageCode = targetLanguage,
-            excludeConceptId = concept.id,
-            limit = 8
-        )
-        val distractors = rawDistractors
-            .filter { it.trim().lowercase() !in validMeanings }
-            .distinctBy { it.trim().lowercase() }
-            .take(3)
-
-        val options = (distractors + correctText).shuffled()
-        _uiState.value = _uiState.value.copy(choiceOptions = options, isLoadingChoices = false)
     }
 
     /**
@@ -235,38 +252,44 @@ class ReviewSessionViewModel @Inject constructor(
         val concept = state.currentConcept ?: return
 
         viewModelScope.launch {
-            val now = DateTimeUtils.now()
-            val currentState = learningStateRepository.get(concept.id) ?: LearningState(conceptId = concept.id)
-            val outcome = processReviewAnswer(currentState, isCorrect, now)
+            try {
+                val now = DateTimeUtils.now()
+                val currentState = learningStateRepository.get(concept.id) ?: LearningState(conceptId = concept.id)
+                val outcome = processReviewAnswer(currentState, isCorrect, now)
 
-            learningStateRepository.save(outcome.newState)
-            reviewHistoryRepository.record(
-                conceptId = concept.id,
-                sessionId = sessionId,
-                outcome = outcome,
-                isCorrect = isCorrect,
-                reviewDate = now,
-                responseTimeMs = now - lastCardShownAt
-            )
+                learningStateRepository.save(outcome.newState)
+                reviewHistoryRepository.record(
+                    conceptId = concept.id,
+                    sessionId = sessionId,
+                    outcome = outcome,
+                    isCorrect = isCorrect,
+                    reviewDate = now,
+                    responseTimeMs = now - lastCardShownAt
+                )
 
-            val nextIndex = state.currentIndex + 1
-            lastCardShownAt = DateTimeUtils.now()
-            val isFinished = nextIndex >= state.queue.size
+                val nextIndex = state.currentIndex + 1
+                lastCardShownAt = DateTimeUtils.now()
+                val isFinished = nextIndex >= state.queue.size
 
-            _uiState.value = state.copy(
-                currentIndex = nextIndex,
-                correctCount = state.correctCount + if (isCorrect) 1 else 0,
-                wrongCount = state.wrongCount + if (!isCorrect) 1 else 0,
-                isFlipped = false,
-                isFinished = isFinished,
-                choiceOptions = emptyList(),
-                selectedChoiceText = null
-            )
+                _uiState.value = state.copy(
+                    currentIndex = nextIndex,
+                    correctCount = state.correctCount + if (isCorrect) 1 else 0,
+                    wrongCount = state.wrongCount + if (!isCorrect) 1 else 0,
+                    isFlipped = false,
+                    isFinished = isFinished,
+                    choiceOptions = emptyList(),
+                    selectedChoiceText = null
+                )
 
-            if (isFinished) {
-                sessionId?.let { reviewSessionRepository.endSession(it, DateTimeUtils.now()) }
-            } else if (reviewMode == ReviewMode.MULTIPLE_CHOICE) {
-                loadChoiceOptionsForCurrent(state.targetLanguage)
+                if (isFinished) {
+                    sessionId?.let { reviewSessionRepository.endSession(it, DateTimeUtils.now()) }
+                } else if (reviewMode == ReviewMode.MULTIPLE_CHOICE) {
+                    loadChoiceOptionsForCurrent(state.targetLanguage)
+                }
+            } catch (e: Exception) {
+                // رفع باگ Crash: خطای غیرمنتظره وسط ثبت پاسخ نباید کل اپ را ببندد؛ جلسه را
+                // با نتیجه فعلی (تا همین‌جا) به‌صورت کنترل‌شده تمام می‌کنیم.
+                _uiState.value = state.copy(isFinished = true, choiceOptions = emptyList(), selectedChoiceText = null)
             }
         }
     }
