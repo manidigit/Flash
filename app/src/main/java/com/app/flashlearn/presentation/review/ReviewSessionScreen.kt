@@ -241,8 +241,11 @@ private fun MultipleChoiceCard(
                             else -> CardDefaults.cardColors().containerColor
                         }
                         Card(
-                            onClick = { onSelect(option) },
-                            enabled = selectedOption == null,
+                            // به‌جای Card(enabled=false)، تپ‌های اضافه بعد از انتخاب اول را
+                            // در خود onClick نادیده می‌گیریم (رفع باگ: enabled=false در
+                            // متریال۳ به‌طور خودکار رنگ‌های سبز/قرمز سفارشی را با رنگ
+                            // پیش‌فرض «غیرفعال» جایگزین می‌کرد و اصلاً دیده نمی‌شدند).
+                            onClick = { if (selectedOption == null) onSelect(option) },
                             modifier = Modifier.weight(1f).height(96.dp),
                             colors = CardDefaults.cardColors(containerColor = containerColor)
                         ) {

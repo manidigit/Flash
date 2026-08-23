@@ -19,7 +19,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // رفع باگ («برای Update باید اول Uninstall کنم»): چون هر Run در GitHub Actions یک
+    // ماشین کاملاً تازه است، بدون این بخش، Gradle از کلید Debug پیش‌فرض سیستم (که هربار
+    // به‌صورت تصادفی روی همان Runner ساخته می‌شود) استفاده می‌کرد؛ یعنی هر Build با یک
+    // امضای متفاوت از Build قبلی امضا می‌شد. اندروید APK جدید را «Update» همان اپ قبلی
+    // نمی‌داند مگر امضایشان دقیقاً یکی باشد، پس نصب رد می‌شد تا اول حذف دستی انجام شود.
+    // با مشخص‌کردن یک فایل Keystore ثابت (که در همین Repository نگه‌داری می‌شود)، همه
+    // Buildها همیشه با همان یک کلید امضا می‌شوند و Update عادی روی نسخه قبلی جواب می‌دهد.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
         }
