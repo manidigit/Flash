@@ -14,7 +14,11 @@ object ScriptDetector {
     private val persianArabicLanguages = setOf("fa", "ar", "ur", "ps")
 
     private fun hasPersianArabicScript(text: String): Boolean =
-        text.any { it.code in persianArabicRange }
+        // فقط حروف واقعی شمرده می‌شوند، نه علامت‌های نگارشی؛ رفع باگ: علامت سؤال فارسی
+        // «؟» (U+061F) و ویرگول فارسی «،» هم داخل همین بازه یونیکد هستند ولی حرف نیستند،
+        // پس یک جمله اسپانیایی که فقط علامت سؤالش «؟» باشد نباید به‌اشتباه «فارسی/عربی»
+        // تشخیص داده شود.
+        text.any { it.isLetter() && it.code in persianArabicRange }
 
     private fun hasLatinLetters(text: String): Boolean =
         text.any { it.isLetter() && it.code < 0x0250 }

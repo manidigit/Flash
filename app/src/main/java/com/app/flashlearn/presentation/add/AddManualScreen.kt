@@ -62,15 +62,13 @@ fun AddManualScreen(
             value = state.sourceText,
             onValueChange = viewModel::onSourceTextChanged,
             label = { Text(stringResource(R.string.add_manual_source_text_label, state.sourceLanguage)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = state.targetText,
             onValueChange = viewModel::onTargetTextChanged,
             label = { Text(stringResource(R.string.add_manual_target_text_label, state.targetLanguage)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = state.pronunciation,

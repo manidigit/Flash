@@ -48,8 +48,7 @@ fun AddAIScreen(
             value = state.sourceText,
             onValueChange = viewModel::onSourceTextChanged,
             label = { Text(stringResource(R.string.add_ai_source_text_label, state.sourceLanguage)) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
+            modifier = Modifier.fillMaxWidth()
         )
 
         Button(
@@ -71,8 +70,7 @@ fun AddAIScreen(
                 value = state.editedTranslation,
                 onValueChange = viewModel::onEditedTranslationChanged,
                 label = { Text(stringResource(R.string.add_ai_translation_label, state.targetLanguage)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value = state.editedPronunciation,

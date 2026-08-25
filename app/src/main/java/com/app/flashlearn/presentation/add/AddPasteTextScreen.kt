@@ -164,16 +164,19 @@ private fun EntryRow(
             ) {
                 Checkbox(checked = entry.included, onCheckedChange = { onToggle() })
                 Column(modifier = Modifier.weight(1f)) {
+                    // رفع باگ نمایشی: singleLine=true قبلاً باعث می‌شد جمله‌های بلند
+                    // اسپانیایی/لاتین داخل این فیلد به‌جای شروع، از وسط (نزدیک انتهای متن)
+                    // نمایش داده شوند - چون فیلد تک‌خطی برای نمایش کرسر (که پیش‌فرض انتهای
+                    // متن است) به‌صورت افقی اسکرول می‌شود، و این با جهت راست‌چین اجباری اپ
+                    // ترکیب بدی داشت. حالا اجازه شکستن خط داده می‌شود تا کل متن دیده شود.
                     OutlinedTextField(
                         value = entry.sourceText,
                         onValueChange = { onEdit(it, entry.targetText) },
-                        singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = entry.targetText,
                         onValueChange = { onEdit(entry.sourceText, it) },
-                        singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)
                     )
                 }
