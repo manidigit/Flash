@@ -159,6 +159,7 @@
     <string name="settings_change_languages_button">تغییر زبان‌ها</string>
     <string name="settings_backup_restore_card">پشتیبان‌گیری و بازیابی</string>
     <string name="settings_ai_settings_card">تنظیمات AI</string>
+    <string name="settings_app_version">نسخه %1$d — ساخته‌شده در %2$s</string>
 
     <!-- Statistics -->
     <string name="statistics_title">آمار</string>

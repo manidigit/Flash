@@ -1,8 +1,38 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.TimeZone
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+}
+
+/**
+ * رفع درخواست کاربر: «توی تنظیمات نسخه برنامه رو بنویسه تا ببینم هر Update واقعاً جلو
+ * رفته یا نه». چون این پروژه به‌صورت دستی نسخه‌گذاری نمی‌شود (و فراموش‌کردن دستی بالا
+ * بردن شماره نسخه در هر تغییر، همان دسته باگ‌های قبلی این پروژه بود)، شماره نسخه از
+ * روی تعداد Commit های Git محاسبه می‌شود؛ یعنی خودکار و بدون نیاز به یادآوری دستی با هر
+ * Push بالا می‌رود. اگر (به هر دلیل، مثلاً Checkout با تاریخچه ناقص) این محاسبه ممکن
+ * نبود، به‌جای Crash کردن Build، مقدار ۱ در نظر گرفته می‌شود.
+ */
+fun gitCommitCount(): Int = try {
+    val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+        .redirectErrorStream(true)
+        .start()
+    val output = process.inputStream.bufferedReader().readText().trim()
+    process.waitFor()
+    output.toIntOrNull() ?: 1
+} catch (e: Exception) {
+    1
+}
+
+val computedVersionCode = gitCommitCount()
+val buildTimeFormatted: String = run {
+    val formatter = SimpleDateFormat("yyyy/MM/dd HH:mm")
+    formatter.timeZone = TimeZone.getTimeZone("Asia/Tehran")
+    formatter.format(Date())
 }
 
 android {
@@ -13,10 +43,11 @@ android {
         applicationId = "com.app.flashlearn"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0-dev"
+        versionCode = computedVersionCode
+        versionName = "1.$computedVersionCode"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BUILD_TIME", "\"$buildTimeFormatted\"")
     }
 
     // رفع باگ («برای Update باید اول Uninstall کنم»): چون هر Run در GitHub Actions یک
@@ -55,6 +86,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {

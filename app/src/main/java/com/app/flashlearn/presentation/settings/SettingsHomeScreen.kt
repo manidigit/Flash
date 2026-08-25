@@ -98,6 +98,21 @@ fun SettingsHomeScreen(
                 style = MaterialTheme.typography.bodyLarge
             )
         }
+
+        // درخواست کاربر: بعد از هر Update، بتواند مطمئن شود نسخه جدید واقعاً نصب شده
+        // (مثلاً از نسخه ۴ به ۵ رفته یا نه). BuildConfig.VERSION_CODE و BUILD_TIME هر دو
+        // خودکار در زمان Build محاسبه می‌شوند (بند build.gradle.kts)، نیازی به یادآوری
+        // دستی برای بالا بردن شماره نسخه نیست.
+        Text(
+            text = stringResource(
+                R.string.settings_app_version,
+                com.app.flashlearn.BuildConfig.VERSION_CODE,
+                com.app.flashlearn.BuildConfig.BUILD_TIME
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = Spacing.sm)
+        )
     }
 }
 
