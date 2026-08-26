@@ -59,6 +59,10 @@ class ParsePasteTextUseCase @Inject constructor() {
     private val inlineEqualsLine = Regex("^(.+?)\\s*=\\s*(.+)$")
     private val inlineColonLine = Regex("^(.+?):\\s*(.+)$")
     private val noteArrowMarker = Regex("←|→|->|<-")
+    // یادداشت ریشه‌ای مستقل که در بلوک خودش می‌آید (نه به‌عنوان خط اضافه همان بلوک)،
+    // مثل «از admitir» یا «مشتق از permitir». باید به ردیف قبلی متصل شود، نه به‌عنوان یک
+    // کلمه تنهای منتظر لیست معنی در نظر گرفته شود (که باعث ادغام اشتباه با بلوک بعدی می‌شد).
+    private val standaloneNoteLine = Regex("^(مشتق\\s+)?از\\s+\\S")
 
     operator fun invoke(rawText: String): List<ParsedVocabularyEntry> {
         val normalizedText = headingEntryStart.replace(rawText) { match -> "\n\n" + match.value }
@@ -102,6 +106,17 @@ class ParsePasteTextUseCase @Inject constructor() {
             return true
         }
 
+        // یک یادداشت ریشه‌ای که خودش در یک بلوک جداگانه آمده (نه به‌عنوان خط اضافه همان
+        // بلوک) را به آخرین ردیف ثبت‌شده متصل می‌کند، به‌جای این‌که به اشتباه یک کلمه تنهای
+        // منتظر لیست معنی در بلوک بعدی در نظر گرفته شود.
+        fun attachNoteToLastEntry(note: String) {
+            if (results.isEmpty()) return
+            val lastIndex = results.size - 1
+            val last = results[lastIndex]
+            val mergedExtra = if (last.extraLabel.isNullOrBlank()) note else "${last.extraLabel} — $note"
+            results[lastIndex] = last.copy(extraLabel = mergedExtra)
+        }
+
         fun processNormalChunk(cleanedLines: List<String>) {
             val pending = mutableListOf<String>()
             for (line in cleanedLines) {
@@ -128,8 +143,11 @@ class ParsePasteTextUseCase @Inject constructor() {
             }
 
             if (cleaned.size == 1) {
-                if (!tryInlinePair(cleaned[0])) {
-                    pendingSourceOnly = cleaned[0]
+                val line = cleaned[0]
+                if (standaloneNoteLine.containsMatchIn(line)) {
+                    attachNoteToLastEntry(line)
+                } else if (!tryInlinePair(line)) {
+                    pendingSourceOnly = line
                 }
                 continue
             }
