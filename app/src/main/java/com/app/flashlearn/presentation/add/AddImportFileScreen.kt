@@ -3,6 +3,7 @@ package com.app.flashlearn.presentation.add
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,6 +60,7 @@ fun AddImportFileScreen(
     val context = LocalContext.current
     val defaultFileLabel = stringResource(R.string.add_import_file_default_name)
     var newCategoryText by remember { mutableStateOf("") }
+    var categorySectionExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.importedCount) {
         if (state.importedCount != null && state.duplicateCount == 0 && state.translationsAddedCount == 0) onImported()
@@ -95,47 +97,64 @@ fun AddImportFileScreen(
             Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = Spacing.xs))
         }
 
-        Text(
-            stringResource(R.string.add_paste_category_section),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = Spacing.sm)
-        )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            item {
-                FilterChip(
-                    selected = state.selectedCategoryId == null,
-                    onClick = { viewModel.onCategorySelected(null) },
-                    label = { Text(stringResource(R.string.add_paste_no_category)) }
-                )
-            }
-            items(state.categories, key = { it.id }) { category ->
-                FilterChip(
-                    selected = state.selectedCategoryId == category.id,
-                    onClick = {
-                        viewModel.onCategorySelected(
-                            if (state.selectedCategoryId == category.id) null else category.id
-                        )
-                    },
-                    label = { Text(category.name) }
-                )
-            }
-        }
+        val selectedCategoryName = state.categories.firstOrNull { it.id == state.selectedCategoryId }?.name
         Row(
-            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-            modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.xs)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing.sm)
+                .clickable { categorySectionExpanded = !categorySectionExpanded },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                value = newCategoryText,
-                onValueChange = { newCategoryText = it },
-                label = { Text(stringResource(R.string.add_manual_new_category_label)) },
-                modifier = Modifier.weight(1f),
-                singleLine = true
+            Text(
+                text = stringResource(R.string.add_paste_category_section) +
+                    (selectedCategoryName?.let { " - $it" } ?: ""),
+                style = MaterialTheme.typography.titleMedium
             )
-            Button(
-                onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
-                enabled = newCategoryText.isNotBlank()
+            Text(
+                text = if (categorySectionExpanded) "▲" else "▼",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        if (categorySectionExpanded) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                item {
+                    FilterChip(
+                        selected = state.selectedCategoryId == null,
+                        onClick = { viewModel.onCategorySelected(null) },
+                        label = { Text(stringResource(R.string.add_paste_no_category)) }
+                    )
+                }
+                items(state.categories, key = { it.id }) { category ->
+                    FilterChip(
+                        selected = state.selectedCategoryId == category.id,
+                        onClick = {
+                            viewModel.onCategorySelected(
+                                if (state.selectedCategoryId == category.id) null else category.id
+                            )
+                        },
+                        label = { Text(category.name) }
+                    )
+                }
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.xs)
             ) {
-                Text(stringResource(R.string.action_add))
+                OutlinedTextField(
+                    value = newCategoryText,
+                    onValueChange = { newCategoryText = it },
+                    label = { Text(stringResource(R.string.add_manual_new_category_label)) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                Button(
+                    onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
+                    enabled = newCategoryText.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.action_add))
+                }
             }
         }
 

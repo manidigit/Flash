@@ -1,5 +1,6 @@
 package com.app.flashlearn.presentation.add
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -20,7 +22,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +49,11 @@ import com.app.flashlearn.ui.theme.Spacing
  *
  * درخواست کاربر: انتخاب یک دسته‌بندی (یا ساخت دسته‌بندی جدید) قبل از Import، تا همه
  * کلمات این دسته یک‌جا به همان Category تعلق بگیرند.
+ *
+ * رفع باگ فضای صفحه: قبلاً بخش دسته‌بندی (عنوان + ردیف Chip ها + فیلد دسته‌بندی جدید)
+ * همیشه به‌طور کامل باز بود و فضای زیادی از صفحه کوچک موبایل را می‌گرفت، طوری که لیست
+ * پیش‌نمایش (که مهم‌تر است) خیلی کوچک و سخت برای دیدن می‌شد. حالا این بخش پیش‌فرض بسته
+ * است و فقط با لمس یک ردیف کوچک (که دسته‌بندی فعلی را هم نشان می‌دهد) باز می‌شود.
  */
 @Composable
 fun AddPasteTextScreen(
@@ -55,6 +62,7 @@ fun AddPasteTextScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     var newCategoryText by remember { mutableStateOf("") }
+    var categorySectionExpanded by remember { mutableStateOf(false) }
 
     // بند 64 (رفع باگ): قبلاً به‌محض ست‌شدن importedCount بلافاصله از صفحه خارج می‌شدیم و
     // کاربر هیچ‌وقت نمی‌فهمید چند مورد به‌خاطر تکراری بودن رد شده‌اند. حالا فقط وقتی
@@ -80,47 +88,67 @@ fun AddPasteTextScreen(
             placeholder = { Text(stringResource(R.string.add_paste_placeholder)) }
         )
 
-        Text(
-            stringResource(R.string.add_paste_category_section),
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(top = Spacing.sm)
-        )
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            item {
-                FilterChip(
-                    selected = state.selectedCategoryId == null,
-                    onClick = { viewModel.onCategorySelected(null) },
-                    label = { Text(stringResource(R.string.add_paste_no_category)) }
-                )
-            }
-            items(state.categories, key = { it.id }) { category ->
-                FilterChip(
-                    selected = state.selectedCategoryId == category.id,
-                    onClick = {
-                        viewModel.onCategorySelected(
-                            if (state.selectedCategoryId == category.id) null else category.id
-                        )
-                    },
-                    label = { Text(category.name) }
-                )
-            }
-        }
+        val selectedCategoryName = state.categories.firstOrNull { it.id == state.selectedCategoryId }?.name
         Row(
-            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-            modifier = Modifier.padding(top = Spacing.xs)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing.sm)
+                .clickable { categorySectionExpanded = !categorySectionExpanded },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                value = newCategoryText,
-                onValueChange = { newCategoryText = it },
-                label = { Text(stringResource(R.string.add_manual_new_category_label)) },
-                modifier = Modifier.weight(1f),
-                singleLine = true
+            Text(
+                text = stringResource(R.string.add_paste_category_section) +
+                    (selectedCategoryName?.let { " - $it" } ?: ""),
+                style = MaterialTheme.typography.titleMedium
             )
-            Button(
-                onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
-                enabled = newCategoryText.isNotBlank()
+            Text(
+                text = if (categorySectionExpanded) "▲" else "▼",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        if (categorySectionExpanded) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.padding(top = Spacing.xs)
             ) {
-                Text(stringResource(R.string.action_add))
+                item {
+                    FilterChip(
+                        selected = state.selectedCategoryId == null,
+                        onClick = { viewModel.onCategorySelected(null) },
+                        label = { Text(stringResource(R.string.add_paste_no_category)) }
+                    )
+                }
+                items(state.categories, key = { it.id }) { category ->
+                    FilterChip(
+                        selected = state.selectedCategoryId == category.id,
+                        onClick = {
+                            viewModel.onCategorySelected(
+                                if (state.selectedCategoryId == category.id) null else category.id
+                            )
+                        },
+                        label = { Text(category.name) }
+                    )
+                }
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.padding(top = Spacing.xs)
+            ) {
+                OutlinedTextField(
+                    value = newCategoryText,
+                    onValueChange = { newCategoryText = it },
+                    label = { Text(stringResource(R.string.add_manual_new_category_label)) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                Button(
+                    onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
+                    enabled = newCategoryText.isNotBlank()
+                ) {
+                    Text(stringResource(R.string.action_add))
+                }
             }
         }
 
