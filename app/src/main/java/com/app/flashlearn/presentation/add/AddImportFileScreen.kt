@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -17,14 +18,19 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,6 +46,9 @@ import com.app.flashlearn.ui.theme.Spacing
  * Import File - CSV/JSON (بند 43): انتخاب فایل با Storage Access Framework، Parse خودکار
  * بر اساس پسوند، و همان الگوی Preview Table قابل ویرایش قبل از Import نهایی.
  * تمام متن‌های این صفحه از strings.xml خوانده می‌شوند (بند 83).
+ *
+ * درخواست کاربر: انتخاب یک دسته‌بندی (یا ساخت دسته‌بندی جدید) قبل از Import، دقیقاً مثل
+ * «جای‌گذاری متن».
  */
 @Composable
 fun AddImportFileScreen(
@@ -49,6 +58,7 @@ fun AddImportFileScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val defaultFileLabel = stringResource(R.string.add_import_file_default_name)
+    var newCategoryText by remember { mutableStateOf("") }
 
     LaunchedEffect(state.importedCount) {
         if (state.importedCount != null && state.duplicateCount == 0 && state.translationsAddedCount == 0) onImported()
@@ -83,6 +93,50 @@ fun AddImportFileScreen(
 
         state.fileName?.let {
             Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = Spacing.xs))
+        }
+
+        Text(
+            stringResource(R.string.add_paste_category_section),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = Spacing.sm)
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            item {
+                FilterChip(
+                    selected = state.selectedCategoryId == null,
+                    onClick = { viewModel.onCategorySelected(null) },
+                    label = { Text(stringResource(R.string.add_paste_no_category)) }
+                )
+            }
+            items(state.categories, key = { it.id }) { category ->
+                FilterChip(
+                    selected = state.selectedCategoryId == category.id,
+                    onClick = {
+                        viewModel.onCategorySelected(
+                            if (state.selectedCategoryId == category.id) null else category.id
+                        )
+                    },
+                    label = { Text(category.name) }
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+            modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.xs)
+        ) {
+            OutlinedTextField(
+                value = newCategoryText,
+                onValueChange = { newCategoryText = it },
+                label = { Text(stringResource(R.string.add_manual_new_category_label)) },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            Button(
+                onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
+                enabled = newCategoryText.isNotBlank()
+            ) {
+                Text(stringResource(R.string.action_add))
+            }
         }
 
         state.errorMessage?.let {

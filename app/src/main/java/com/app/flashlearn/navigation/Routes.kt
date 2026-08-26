@@ -8,6 +8,7 @@ object Routes {
     const val REVIEW_TYPE_SELECT = "review_type_select"
     const val REVIEW_SESSION = "review_session/{reviewType}?categoryId={categoryId}&reviewMode={reviewMode}"
     const val VOCABULARY_LIST = "vocabulary_list"
+    const val DUPLICATE_WORDS = "duplicate_words"
     const val CONCEPT_DETAIL = "concept_detail/{conceptId}"
     const val ADD_HOME = "add_home"
     const val ADD_MANUAL = "add_manual"

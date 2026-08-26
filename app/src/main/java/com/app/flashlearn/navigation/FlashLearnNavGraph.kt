@@ -21,6 +21,7 @@ import com.app.flashlearn.presentation.settings.BackupRestoreScreen
 import com.app.flashlearn.presentation.settings.SettingsHomeScreen
 import com.app.flashlearn.presentation.statistics.StatisticsScreen
 import com.app.flashlearn.presentation.vocabulary.ConceptDetailScreen
+import com.app.flashlearn.presentation.vocabulary.DuplicateWordsScreen
 import com.app.flashlearn.presentation.vocabulary.VocabularyListScreen
 
 @Composable
@@ -72,14 +73,20 @@ fun FlashLearnNavGraph(
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.HOME) { inclusive = true }
                     }
-                }
+                },
+                onBackToTypeSelect = { navController.popBackStack() }
             )
         }
 
         composable(Routes.VOCABULARY_LIST) {
             VocabularyListScreen(
-                onConceptClick = { conceptId -> navController.navigate(Routes.conceptDetail(conceptId)) }
+                onConceptClick = { conceptId -> navController.navigate(Routes.conceptDetail(conceptId)) },
+                onDuplicateWordsClick = { navController.navigate(Routes.DUPLICATE_WORDS) }
             )
+        }
+
+        composable(Routes.DUPLICATE_WORDS) {
+            DuplicateWordsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(

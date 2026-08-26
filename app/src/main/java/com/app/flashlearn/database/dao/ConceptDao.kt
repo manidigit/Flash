@@ -111,4 +111,27 @@ interface ConceptDao {
         """
     )
     suspend fun searchInCategory(query: String, categoryId: Long, limit: Int, offset: Int): List<ConceptEntity>
+
+    /**
+     * پیدا کردن همه Concept هایی که در متن مبدأ (یک زبان مشخص) با حداقل یک Concept فعال
+     * دیگر دقیقاً یکسان‌اند (بعد از Trim + lower-case). برای بخش «کلمات تکراری» در صفحه
+     * واژگان (بند 64). نتیجه بر اساس متن نرمال‌شده مرتب می‌شود تا در لایه بالاتر راحت
+     * گروه‌بندی شود، و در هر گروه قدیمی‌ترین (createdAt کمتر) اول می‌آید.
+     */
+    @Query(
+        """
+        SELECT concepts.* FROM concepts
+        INNER JOIN contents ON contents.conceptId = concepts.id
+        WHERE concepts.active = 1 AND contents.languageCode = :languageCode
+          AND LOWER(TRIM(contents.text)) IN (
+              SELECT LOWER(TRIM(c2.text)) FROM contents c2
+              INNER JOIN concepts co2 ON co2.id = c2.conceptId
+              WHERE co2.active = 1 AND c2.languageCode = :languageCode
+              GROUP BY LOWER(TRIM(c2.text))
+              HAVING COUNT(*) > 1
+          )
+        ORDER BY LOWER(TRIM(contents.text)) ASC, concepts.createdAt ASC
+        """
+    )
+    suspend fun getDuplicateConceptsByText(languageCode: String): List<ConceptEntity>
 }

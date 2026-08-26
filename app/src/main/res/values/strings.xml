@@ -72,6 +72,8 @@
     <string name="add_paste_importing">در حال Import...</string>
     <string name="add_paste_import_all_button">Import همه (%1$d)</string>
     <string name="add_paste_import_error">Import متوقف شد: %1$s</string>
+    <string name="add_paste_category_section">دسته‌بندی (اختیاری)</string>
+    <string name="add_paste_no_category">بدون دسته‌بندی</string>
     <string name="add_paste_script_mismatch_warning">⚠ ممکن است این ردیف اشتباه تشخیص داده شده باشد (الفبا با زبان انتخاب‌شده همخوانی ندارد)</string>
 
     <!-- Add Import File -->
@@ -115,6 +117,8 @@
     <string name="review_session_finished">جلسه مرور تمام شد! 🎉</string>
     <string name="review_session_result_summary">درست: %1$d   ·   غلط: %2$d</string>
     <string name="review_session_back_to_home">بازگشت به خانه</string>
+    <string name="review_session_continue">ادامه مرور</string>
+    <string name="review_session_back_to_type_select">بازگشت به مرور کلمات</string>
 
     <!-- AI Settings -->
     <string name="ai_settings_title">تنظیمات AI</string>
@@ -198,4 +202,14 @@
     <string name="vocabulary_empty_no_match">چیزی با این فیلتر پیدا نشد</string>
     <string name="vocabulary_add_favorite">افزودن به موردعلاقه‌ها</string>
     <string name="vocabulary_remove_favorite">حذف از موردعلاقه‌ها</string>
+
+    <!-- Duplicate Words -->
+    <string name="duplicate_words_title">کلمات تکراری</string>
+    <string name="duplicate_words_button_short">تکراری‌ها</string>
+    <string name="duplicate_words_subtitle">کلماتی که متن مبدأشان دقیقاً یکسان است. پیش‌فرض قدیمی‌ترین نسخه نگه داشته می‌شود.</string>
+    <string name="duplicate_words_none_found">هیچ کلمه تکراری‌ای پیدا نشد</string>
+    <string name="duplicate_words_original_badge">(اولین نسخه)</string>
+    <string name="duplicate_words_delete_marked">حذف موارد انتخاب‌شده (%1$d)</string>
+    <string name="duplicate_words_deleting">در حال حذف...</string>
+    <string name="duplicate_words_deleted_summary">%1$d مورد حذف شد</string>
 </resources>

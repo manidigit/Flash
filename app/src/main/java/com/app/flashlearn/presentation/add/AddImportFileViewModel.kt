@@ -6,6 +6,8 @@ import com.app.flashlearn.R
 import com.app.flashlearn.core.util.ScriptDetector
 import com.app.flashlearn.core.util.UiText
 import com.app.flashlearn.domain.model.ParsedVocabularyEntry
+import com.app.flashlearn.domain.model.Category
+import com.app.flashlearn.domain.repository.CategoryRepository
 import com.app.flashlearn.domain.repository.LanguagePairRepository
 import com.app.flashlearn.domain.usecase.ImportParsedEntriesUseCase
 import com.app.flashlearn.domain.usecase.ParseCsvVocabularyUseCase
@@ -23,6 +25,8 @@ data class AddImportFileUiState(
     val entries: List<ParsedVocabularyEntry> = emptyList(),
     val sourceLanguage: String = "es",
     val targetLanguage: String = "fa",
+    val categories: List<Category> = emptyList(),
+    val selectedCategoryId: Long? = null,
     val errorMessage: UiText? = null,
     val isImporting: Boolean = false,
     val importedCount: Int? = null,
@@ -35,13 +39,17 @@ data class AddImportFileUiState(
 /**
  * Import File - CSV و JSON (بند 43). XLSX/SQLite در مرحله جداگانه اضافه می‌شوند (نیاز به
  * Parser دودویی/کتابخانه اضافه دارند). فرمت بر اساس پسوند نام فایل تشخیص داده می‌شود.
+ *
+ * درخواست کاربر: امکان انتخاب یک دسته‌بندی (یا ساخت دسته‌بندی جدید) قبل از Import، دقیقاً
+ * مثل «جای‌گذاری متن» (بند 64).
  */
 @HiltViewModel
 class AddImportFileViewModel @Inject constructor(
     private val parseCsv: ParseCsvVocabularyUseCase,
     private val parseJson: ParseJsonVocabularyUseCase,
     private val importParsedEntries: ImportParsedEntriesUseCase,
-    private val languagePairRepository: LanguagePairRepository
+    private val languagePairRepository: LanguagePairRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddImportFileUiState())
@@ -54,6 +62,23 @@ class AddImportFileViewModel @Inject constructor(
                 sourceLanguage = pair?.sourceLanguage ?: "es",
                 targetLanguage = pair?.targetLanguage ?: "fa"
             )
+        }
+        viewModelScope.launch {
+            categoryRepository.observeAll().collect { categories ->
+                _uiState.value = _uiState.value.copy(categories = categories)
+            }
+        }
+    }
+
+    fun onCategorySelected(categoryId: Long?) {
+        _uiState.value = _uiState.value.copy(selectedCategoryId = categoryId)
+    }
+
+    fun createCategory(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            val id = categoryRepository.getOrCreate(name.trim())
+            _uiState.value = _uiState.value.copy(selectedCategoryId = id)
         }
     }
 
@@ -110,10 +135,16 @@ class AddImportFileViewModel @Inject constructor(
             // نمی‌ماند؛ ردیف‌های تک‌تک ناموفق هم داخل ImportParsedEntriesUseCase به‌صورت
             // جداگانه Skip می‌شوند، نه اینکه کل Import را متوقف کنند.
             try {
-                val outcome = importParsedEntries(toImport, state.sourceLanguage, state.targetLanguage)
+                val outcome = importParsedEntries(
+                    toImport,
+                    state.sourceLanguage,
+                    state.targetLanguage,
+                    categoryId = state.selectedCategoryId
+                )
                 _uiState.value = AddImportFileUiState(
                     sourceLanguage = state.sourceLanguage,
                     targetLanguage = state.targetLanguage,
+                    categories = state.categories,
                     importedCount = outcome.insertedCount,
                     duplicateCount = outcome.duplicateCount,
                     translationsAddedCount = outcome.translationsAddedCount

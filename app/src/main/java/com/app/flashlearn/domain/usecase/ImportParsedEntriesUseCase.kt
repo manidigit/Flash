@@ -46,7 +46,11 @@ class ImportParsedEntriesUseCase @Inject constructor(
     suspend operator fun invoke(
         entries: List<ParsedVocabularyEntry>,
         sourceLanguage: String,
-        targetLanguage: String
+        targetLanguage: String,
+        // درخواست کاربر: امکان تخصیص یک دسته‌بندی به همه رکوردهای این دسته Import (بند 64).
+        // فقط روی Concept های کاملاً جدید اعمال می‌شود؛ اگر ردیفی به یک کلمه از قبل موجود
+        // ادغام شود، دسته‌بندی آن کلمه (که ممکن است قبلاً دستی تنظیم شده) دست‌نخورده می‌ماند.
+        categoryId: Long? = null
     ): ImportOutcome {
         val now = DateTimeUtils.now()
         var insertedCount = 0
@@ -80,7 +84,7 @@ class ImportParsedEntriesUseCase @Inject constructor(
                     id = 0,
                     uuid = UUID.randomUUID().toString(),
                     contentType = ContentType.WORD,
-                    categoryId = null,
+                    categoryId = categoryId,
                     favorite = false,
                     active = true,
                     createdAt = now,

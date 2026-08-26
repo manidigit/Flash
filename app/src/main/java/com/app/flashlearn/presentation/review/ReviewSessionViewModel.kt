@@ -93,6 +93,16 @@ class ReviewSessionViewModel @Inject constructor(
         loadQueue()
     }
 
+    /**
+     * درخواست کاربر: بعد از پایان یک دسته مرور، امکان ادامه‌دادن به دسته بعدی کارت‌های
+     * Due (همان نوع/دسته‌بندی/حالت مرور) بدون خروج از این صفحه. اگر کارت آماده دیگری
+     * نباشد، همان صفحه «چیزی برای مرور نبود» دوباره نمایش داده می‌شود.
+     */
+    fun continueReviewing() {
+        _uiState.value = ReviewSessionUiState(reviewMode = reviewMode, isLoading = true)
+        loadQueue()
+    }
+
     private fun loadQueue() {
         viewModelScope.launch {
             // رفع باگ (Crash در مرور تصادفی): هر خطای غیرمنتظره‌ای اینجا (مثلاً یک ردیف

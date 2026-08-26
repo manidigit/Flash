@@ -103,6 +103,17 @@ class ConceptRepositoryImpl @Inject constructor(
 
     override fun observeActiveCount(): Flow<Int> = conceptDao.observeActiveCount()
 
+    override suspend fun findDuplicateGroups(sourceLanguage: String): List<List<Concept>> {
+        val entities = conceptDao.getDuplicateConceptsByText(sourceLanguage)
+        val concepts = entities.map { buildDomain(it.id, it) }
+        // چون کوئری از قبل بر اساس متن نرمال‌شده مرتب شده، فقط کافی است اینجا گروه‌بندی شوند.
+        return concepts
+            .groupBy { it.contentFor(sourceLanguage)?.text?.trim()?.lowercase() ?: "" }
+            .values
+            .filter { it.size > 1 }
+            .toList()
+    }
+
     private suspend fun buildDomain(
         conceptId: Long,
         entity: com.app.flashlearn.database.entity.ConceptEntity

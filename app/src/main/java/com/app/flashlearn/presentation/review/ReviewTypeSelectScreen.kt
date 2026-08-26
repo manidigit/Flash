@@ -36,7 +36,8 @@ fun ReviewTypeSelectScreen(
     viewModel: ReviewTypeSelectViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
-    var selectedMode by remember { mutableStateOf(ReviewMode.FLASHCARD) }
+    // درخواست کاربر: حالت پیش‌فرض تست چهارگزینه‌ای باشد (نه کارت کلاسیک).
+    var selectedMode by remember { mutableStateOf(ReviewMode.MULTIPLE_CHOICE) }
 
     val types = listOf(
         "RANDOM" to stringResource(R.string.review_type_random),

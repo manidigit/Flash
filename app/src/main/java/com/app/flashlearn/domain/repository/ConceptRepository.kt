@@ -51,4 +51,11 @@ interface ConceptRepository {
     ): List<Concept>
     suspend fun search(query: String, limit: Int, offset: Int, categoryId: Long? = null): List<Concept>
     fun observeActiveCount(): Flow<Int>
+
+    /**
+     * گروه‌های کلمات تکراری (متن مبدأ یکسان در یک زبان). هر گروه شامل ۲ یا بیشتر Concept
+     * است؛ اولین عضو هر گروه قدیمی‌ترین (اولین‌بار اضافه‌شده) است، برای «کلمات تکراری» در
+     * صفحه واژگان (بند 64).
+     */
+    suspend fun findDuplicateGroups(sourceLanguage: String): List<List<Concept>>
 }

@@ -9,7 +9,6 @@ import com.app.flashlearn.domain.model.LearningState
 import com.app.flashlearn.domain.repository.ConceptRepository
 import com.app.flashlearn.domain.repository.LanguageRepository
 import com.app.flashlearn.domain.repository.LearningStateRepository
-import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -22,6 +21,24 @@ class DatabaseSeeder @Inject constructor(
     private val conceptRepository: ConceptRepository,
     private val learningStateRepository: LearningStateRepository
 ) {
+    companion object {
+        /**
+         * رفع باگ («۶ کلمه پیش‌فرض هر بار Import بکاپ تکرار می‌شوند»): قبلاً این ۶ Concept
+         * با UUID تصادفی (UUID.randomUUID()) ساخته می‌شدند. چون applyImport فقط بر اساس
+         * uuid تشخیص Duplicate می‌دهد (نه متن)، و هر نصب تازه یک UUID تصادفی جدید برای
+         * همین ۶ کلمه می‌سازد، وارد کردن بکاپ از هر دستگاه دیگری (که خودش هم این ۶ کلمه
+         * پیش‌فرض را با UUID تصادفی خودش ساخته) همیشه به‌عنوان «۶ Concept کاملاً جدید»
+         * تشخیص داده می‌شد. با UUID ثابت و از‌پیش‌مشخص برای هرکدام، این ۶ کلمه در همه
+         * دستگاه‌ها همیشه همان شناسه یکسان را دارند و Import آن‌ها را درست شناسایی می‌کند.
+         */
+        private const val SEED_UUID_MANZANA = "seed-0001-manzana-flashlearn"
+        private const val SEED_UUID_CASA = "seed-0002-casa-flashlearn"
+        private const val SEED_UUID_COMER = "seed-0003-comer-flashlearn"
+        private const val SEED_UUID_VIAJAR = "seed-0004-viajar-flashlearn"
+        private const val SEED_UUID_HOTEL = "seed-0005-hotel-flashlearn"
+        private const val SEED_UUID_GRACIAS = "seed-0006-gracias-flashlearn"
+    }
+
     suspend fun seedIfNeeded() {
         if (languageRepository.getAll().isNotEmpty()) return
 
@@ -39,20 +56,21 @@ class DatabaseSeeder @Inject constructor(
         )
 
         val samples = listOf(
-            "manzana" to "سیب",
-            "casa" to "خانه",
-            "comer" to "خوردن",
-            "viajar" to "سفر کردن",
-            "hotel" to "هتل",
-            "gracias" to "ممنون"
+            SEED_UUID_MANZANA to ("manzana" to "سیب"),
+            SEED_UUID_CASA to ("casa" to "خانه"),
+            SEED_UUID_COMER to ("comer" to "خوردن"),
+            SEED_UUID_VIAJAR to ("viajar" to "سفر کردن"),
+            SEED_UUID_HOTEL to ("hotel" to "هتل"),
+            SEED_UUID_GRACIAS to ("gracias" to "ممنون")
         )
 
         val now = DateTimeUtils.now()
-        for ((es, fa) in samples) {
+        for ((seedUuid, pair) in samples) {
+            val (es, fa) = pair
             val conceptId = conceptRepository.insert(
                 Concept(
                     id = 0,
-                    uuid = UUID.randomUUID().toString(),
+                    uuid = seedUuid,
                     contentType = ContentType.WORD,
                     categoryId = null,
                     favorite = false,

@@ -23,6 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,10 +44,12 @@ import com.app.flashlearn.ui.theme.Spacing
 /**
  * لیست کامل واژگان با جستجوی واقعی (بند 38-39). ضربه روی یک ردیف به صفحه ویرایش/حذف
  * می‌رود؛ ستاره برای Favorite مستقیماً در همین لیست قابل تغییر است (Quick Action).
+ * آیکون کپی بالای صفحه به بخش «کلمات تکراری» (درخواست کاربر) می‌رود.
  */
 @Composable
 fun VocabularyListScreen(
     onConceptClick: (Long) -> Unit,
+    onDuplicateWordsClick: () -> Unit,
     viewModel: VocabularyListViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -63,14 +66,22 @@ fun VocabularyListScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(Spacing.lg)) {
-        OutlinedTextField(
-            value = state.searchQuery,
-            onValueChange = viewModel::onSearchQueryChanged,
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(stringResource(R.string.vocabulary_search_placeholder)) },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            singleLine = true
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = viewModel::onSearchQueryChanged,
+                modifier = Modifier.weight(1f),
+                placeholder = { Text(stringResource(R.string.vocabulary_search_placeholder)) },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                singleLine = true
+            )
+            OutlinedButton(
+                onClick = onDuplicateWordsClick,
+                modifier = Modifier.padding(start = Spacing.xs)
+            ) {
+                Text(stringResource(R.string.duplicate_words_button_short))
+            }
+        }
 
         Spacer(modifier = Modifier.height(Spacing.md))
 

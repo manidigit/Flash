@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -25,6 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +44,9 @@ import com.app.flashlearn.ui.theme.Spacing
  * Paste Text Import (بند 42): Textarea برای Paste کردن، دکمه Parse، و یک Preview Table
  * قابل ویرایش/حذف قبل از Import نهایی.
  * تمام متن‌های این صفحه از strings.xml خوانده می‌شوند (بند 83).
+ *
+ * درخواست کاربر: انتخاب یک دسته‌بندی (یا ساخت دسته‌بندی جدید) قبل از Import، تا همه
+ * کلمات این دسته یک‌جا به همان Category تعلق بگیرند.
  */
 @Composable
 fun AddPasteTextScreen(
@@ -46,6 +54,7 @@ fun AddPasteTextScreen(
     viewModel: AddPasteTextViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    var newCategoryText by remember { mutableStateOf("") }
 
     // بند 64 (رفع باگ): قبلاً به‌محض ست‌شدن importedCount بلافاصله از صفحه خارج می‌شدیم و
     // کاربر هیچ‌وقت نمی‌فهمید چند مورد به‌خاطر تکراری بودن رد شده‌اند. حالا فقط وقتی
@@ -70,6 +79,50 @@ fun AddPasteTextScreen(
             modifier = Modifier.fillMaxWidth().height(140.dp),
             placeholder = { Text(stringResource(R.string.add_paste_placeholder)) }
         )
+
+        Text(
+            stringResource(R.string.add_paste_category_section),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = Spacing.sm)
+        )
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            item {
+                FilterChip(
+                    selected = state.selectedCategoryId == null,
+                    onClick = { viewModel.onCategorySelected(null) },
+                    label = { Text(stringResource(R.string.add_paste_no_category)) }
+                )
+            }
+            items(state.categories, key = { it.id }) { category ->
+                FilterChip(
+                    selected = state.selectedCategoryId == category.id,
+                    onClick = {
+                        viewModel.onCategorySelected(
+                            if (state.selectedCategoryId == category.id) null else category.id
+                        )
+                    },
+                    label = { Text(category.name) }
+                )
+            }
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+            modifier = Modifier.padding(top = Spacing.xs)
+        ) {
+            OutlinedTextField(
+                value = newCategoryText,
+                onValueChange = { newCategoryText = it },
+                label = { Text(stringResource(R.string.add_manual_new_category_label)) },
+                modifier = Modifier.weight(1f),
+                singleLine = true
+            )
+            Button(
+                onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
+                enabled = newCategoryText.isNotBlank()
+            ) {
+                Text(stringResource(R.string.action_add))
+            }
+        }
 
         Button(
             onClick = viewModel::parse,

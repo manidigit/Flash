@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.R
 import com.app.flashlearn.core.util.ScriptDetector
 import com.app.flashlearn.core.util.UiText
+import com.app.flashlearn.domain.model.Category
 import com.app.flashlearn.domain.model.ParsedVocabularyEntry
+import com.app.flashlearn.domain.repository.CategoryRepository
 import com.app.flashlearn.domain.repository.LanguagePairRepository
 import com.app.flashlearn.domain.usecase.ImportParsedEntriesUseCase
 import com.app.flashlearn.domain.usecase.ParsePasteTextUseCase
@@ -22,6 +24,8 @@ data class AddPasteTextUiState(
     val entries: List<ParsedVocabularyEntry> = emptyList(),
     val sourceLanguage: String = "es",
     val targetLanguage: String = "fa",
+    val categories: List<Category> = emptyList(),
+    val selectedCategoryId: Long? = null,
     val isImporting: Boolean = false,
     val importedCount: Int? = null,
     val duplicateCount: Int = 0,
@@ -34,12 +38,16 @@ data class AddPasteTextUiState(
 /**
  * Paste Text Import (بند 42): متن چندخطی -> Parse -> Preview Table قابل ویرایش -> Import All.
  * هیچ رکوردی بدون عبور از این Preview مستقیم ذخیره نمی‌شود.
+ *
+ * درخواست کاربر: امکان انتخاب یک دسته‌بندی (یا ساخت دسته‌بندی جدید) قبل از Import، تا همه
+ * کلمات این دسته یک‌جا به همان Category تعلق بگیرند، دقیقاً مثل افزودن دستی (بند 15).
  */
 @HiltViewModel
 class AddPasteTextViewModel @Inject constructor(
     private val parsePasteText: ParsePasteTextUseCase,
     private val importParsedEntries: ImportParsedEntriesUseCase,
-    private val languagePairRepository: LanguagePairRepository
+    private val languagePairRepository: LanguagePairRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddPasteTextUiState())
@@ -53,6 +61,11 @@ class AddPasteTextViewModel @Inject constructor(
                 targetLanguage = pair?.targetLanguage ?: "fa"
             )
         }
+        viewModelScope.launch {
+            categoryRepository.observeAll().collect { categories ->
+                _uiState.value = _uiState.value.copy(categories = categories)
+            }
+        }
     }
 
     fun onRawTextChanged(value: String) {
@@ -63,6 +76,18 @@ class AddPasteTextViewModel @Inject constructor(
             rawText = value,
             entries = if (shouldClearStalePreview) emptyList() else _uiState.value.entries
         )
+    }
+
+    fun onCategorySelected(categoryId: Long?) {
+        _uiState.value = _uiState.value.copy(selectedCategoryId = categoryId)
+    }
+
+    fun createCategory(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            val id = categoryRepository.getOrCreate(name.trim())
+            _uiState.value = _uiState.value.copy(selectedCategoryId = id)
+        }
     }
 
     fun parse() {
@@ -107,10 +132,16 @@ class AddPasteTextViewModel @Inject constructor(
             // بند 64: حتی اگر خطای غیرمنتظره‌ای رخ دهد (مثلاً قطع دیتابیس)، isImporting هرگز
             // برای همیشه true نمی‌ماند و کاربر در این صفحه گیر نمی‌کند.
             try {
-                val outcome = importParsedEntries(toImport, state.sourceLanguage, state.targetLanguage)
+                val outcome = importParsedEntries(
+                    toImport,
+                    state.sourceLanguage,
+                    state.targetLanguage,
+                    categoryId = state.selectedCategoryId
+                )
                 _uiState.value = AddPasteTextUiState(
                     sourceLanguage = state.sourceLanguage,
                     targetLanguage = state.targetLanguage,
+                    categories = state.categories,
                     importedCount = outcome.insertedCount,
                     duplicateCount = outcome.duplicateCount,
                     translationsAddedCount = outcome.translationsAddedCount

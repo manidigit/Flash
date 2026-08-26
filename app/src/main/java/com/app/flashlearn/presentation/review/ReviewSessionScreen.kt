@@ -51,6 +51,7 @@ import com.app.flashlearn.ui.theme.Spacing
 fun ReviewSessionScreen(
     reviewType: String,
     onFinished: () -> Unit,
+    onBackToTypeSelect: () -> Unit,
     viewModel: ReviewSessionViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -67,6 +68,8 @@ fun ReviewSessionScreen(
                 correctCount = state.correctCount,
                 wrongCount = state.wrongCount,
                 emptyQueue = state.queue.isEmpty(),
+                onContinue = viewModel::continueReviewing,
+                onBackToTypeSelect = onBackToTypeSelect,
                 onDone = onFinished
             )
         }
@@ -78,6 +81,8 @@ fun ReviewSessionScreen(
                     correctCount = state.correctCount,
                     wrongCount = state.wrongCount,
                     emptyQueue = true,
+                    onContinue = viewModel::continueReviewing,
+                    onBackToTypeSelect = onBackToTypeSelect,
                     onDone = onFinished
                 )
                 return
@@ -278,6 +283,8 @@ private fun ReviewSessionSummary(
     correctCount: Int,
     wrongCount: Int,
     emptyQueue: Boolean,
+    onContinue: () -> Unit,
+    onBackToTypeSelect: () -> Unit,
     onDone: () -> Unit
 ) {
     Column(
@@ -297,7 +304,31 @@ private fun ReviewSessionSummary(
                 modifier = Modifier.padding(top = Spacing.md)
             )
         }
-        Button(onClick = onDone, modifier = Modifier.padding(top = Spacing.xl)) {
+
+        // درخواست کاربر: بعد از پایان یک دسته مرور، فقط «بازگشت به خانه» راه خروج نباشد؛
+        // امکان ادامه مرور (دسته بعدی کارت‌های Due) یا بازگشت به صفحه انتخاب نوع مرور هم باشد.
+        if (!emptyQueue) {
+            Button(
+                onClick = onContinue,
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.xl)
+            ) {
+                Text(stringResource(R.string.review_session_continue))
+            }
+        }
+        OutlinedButton(
+            onClick = onBackToTypeSelect,
+            modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)
+        ) {
+            Text(stringResource(R.string.review_session_back_to_type_select))
+        }
+        Button(
+            onClick = onDone,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)
+        ) {
             Text(stringResource(R.string.review_session_back_to_home))
         }
     }

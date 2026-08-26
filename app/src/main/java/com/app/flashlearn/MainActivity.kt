@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.app.flashlearn.core.seed.DatabaseSeeder
 import com.app.flashlearn.domain.repository.SettingsRepository
 import com.app.flashlearn.navigation.BottomNavDestination
 import com.app.flashlearn.navigation.FlashLearnNavGraph
@@ -43,6 +44,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
+
+    @Inject
+    lateinit var databaseSeeder: DatabaseSeeder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,16 +64,21 @@ class MainActivity : ComponentActivity() {
             }
 
             FlashLearnTheme(useDarkTheme = useDarkTheme) {
-                AppRoot(settingsRepository = settingsRepository)
+                AppRoot(settingsRepository = settingsRepository, databaseSeeder = databaseSeeder)
             }
         }
     }
 }
 
 @Composable
-private fun AppRoot(settingsRepository: SettingsRepository) {
-    // تعیین صفحه شروع: اگر Onboarding قبلاً تکمیل شده، مستقیم به Home برو.
+private fun AppRoot(settingsRepository: SettingsRepository, databaseSeeder: DatabaseSeeder) {
+    // تعیین صفحه شروع: اول Seed کردن دیتابیس (زبان‌ها + کلمات نمونه، اگر قبلاً انجام
+    // نشده) به‌طور کامل تمام می‌شود، بعد اگر Onboarding قبلاً تکمیل شده، مستقیم به Home
+    // می‌رویم. رفع باگ: قبلاً Seed کردن ناهمگام و بدون انتظار در Application اجرا می‌شد؛
+    // حالا اینجا با suspend await می‌شود تا تضمین شود قبل از این‌که کاربر بتواند به
+    // Backup/Restore برسد و بکاپ Import کند، دیتابیس کاملاً آماده و پایدار است.
     val startDestination by produceState<String?>(initialValue = null) {
+        databaseSeeder.seedIfNeeded()
         val completed = settingsRepository.getValue(SettingsRepository.ONBOARDING_COMPLETED) == "true"
         value = if (completed) Routes.HOME else Routes.ONBOARDING
     }
