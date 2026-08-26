@@ -59,10 +59,17 @@ class ParsePasteTextUseCase @Inject constructor() {
     private val inlineEqualsLine = Regex("^(.+?)\\s*=\\s*(.+)$")
     private val inlineColonLine = Regex("^(.+?):\\s*(.+)$")
     private val noteArrowMarker = Regex("←|→|->|<-")
-    // یادداشت ریشه‌ای مستقل که در بلوک خودش می‌آید (نه به‌عنوان خط اضافه همان بلوک)،
-    // مثل «از admitir» یا «مشتق از permitir». باید به ردیف قبلی متصل شود، نه به‌عنوان یک
-    // کلمه تنهای منتظر لیست معنی در نظر گرفته شود (که باعث ادغام اشتباه با بلوک بعدی می‌شد).
-    private val standaloneNoteLine = Regex("^(مشتق\\s+)?از\\s+\\S")
+    // یادداشت مستقل که در بلوک خودش می‌آید (نه به‌عنوان خط اضافه همان بلوک)، مثل «از X»،
+    // «مشتق از X»، «نقطه‌ی مقابل X»، «جمعِ X»، «اسمِ مشتق‌شده از X» و ده‌ها عبارت مشابه دیگر.
+    // به‌جای تلاش برای فهرست‌کردن همه این عبارت‌ها (که همیشه ناقص می‌ماند)، از یک قانون
+    // کلی‌تر و قابل‌اتکاتر استفاده می‌شود: در این سبک واژه‌نامه، خودِ کلمات همیشه با خط
+    // لاتین نوشته می‌شوند (مثل quedar)، و فقط یادداشت‌ها حاوی حروف فارسی/عربی‌اند؛ پس هر
+    // بلوک تک‌خطی که حرف فارسی/عربی داشته باشد، یادداشتِ ردیف قبلی است، نه کلمه‌ای جدید که
+    // منتظر لیست معنی در بلوک بعدی باشد.
+    private val persianArabicLetterRange = 0x0600..0x06FF
+
+    private fun containsPersianArabicLetters(text: String): Boolean =
+        text.any { it.isLetter() && it.code in persianArabicLetterRange }
 
     operator fun invoke(rawText: String): List<ParsedVocabularyEntry> {
         val normalizedText = headingEntryStart.replace(rawText) { match -> "\n\n" + match.value }
@@ -144,7 +151,7 @@ class ParsePasteTextUseCase @Inject constructor() {
 
             if (cleaned.size == 1) {
                 val line = cleaned[0]
-                if (standaloneNoteLine.containsMatchIn(line)) {
+                if (containsPersianArabicLetters(line)) {
                     attachNoteToLastEntry(line)
                 } else if (!tryInlinePair(line)) {
                     pendingSourceOnly = line
