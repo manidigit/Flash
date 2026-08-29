@@ -1,5 +1,6 @@
 package com.app.flashlearn.domain.repository
 
+import com.app.flashlearn.domain.model.ReviewHistory
 import com.app.flashlearn.domain.model.ReviewOutcome
 
 interface ReviewHistoryRepository {
