@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.flashlearn.R
 import com.app.flashlearn.core.util.asString
 import com.app.flashlearn.domain.model.ConflictResolution
+import com.app.flashlearn.domain.model.BackupMode
 import com.app.flashlearn.ui.theme.Spacing
 import java.io.OutputStreamWriter
 
@@ -43,15 +44,18 @@ fun BackupRestoreScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    var pendingBackupMode by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(BackupMode.FULL) }
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
         if (uri == null) return@rememberLauncherForActivityResult
-        viewModel.export { json ->
-            context.contentResolver.openOutputStream(uri)?.use { stream ->
-                OutputStreamWriter(stream).use { it.write(json) }
-            }
+        viewModel.export(pendingBackupMode) { json ->
+            context.contentResolver.openOutputStream(uri)?.use { stream -> OutputStreamWriter(stream).use { it.write(json) } }
         }
+    }
+    fun launchBackup(mode: BackupMode, filename: String) {
+        pendingBackupMode = mode
+        exportLauncher.launch(filename)
     }
 
     val importLauncher = rememberLauncherForActivityResult(
@@ -70,13 +74,11 @@ fun BackupRestoreScreen(
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(Spacing.md)) {
-                Text(stringResource(R.string.backup_export_description))
-                Button(
-                    onClick = { exportLauncher.launch("flashlearn-backup.json") },
-                    modifier = Modifier.padding(top = Spacing.sm),
-                    enabled = !state.isBusy
-                ) {
-                    Text(stringResource(R.string.backup_export_button))
+                Text("بکاپ را می‌توانی جداگانه ذخیره کنی:")
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm), modifier = Modifier.padding(top = Spacing.sm)) {
+                    Button(onClick = { launchBackup(BackupMode.VOCABULARY, "flashlearn-vocabulary-backup.json") }, enabled = !state.isBusy) { Text("واژگان") }
+                    Button(onClick = { launchBackup(BackupMode.LEARNING_PROGRESS, "flashlearn-progress-backup.json") }, enabled = !state.isBusy) { Text("پیشرفت و تنظیمات") }
+                    Button(onClick = { launchBackup(BackupMode.FULL, "flashlearn-full-backup.json") }, enabled = !state.isBusy) { Text("کامل") }
                 }
             }
         }

@@ -1,6 +1,7 @@
 package com.app.flashlearn.domain.repository
 
 import com.app.flashlearn.domain.model.ConflictResolution
+import com.app.flashlearn.domain.model.BackupMode
 import com.app.flashlearn.domain.model.ImportPreview
 import com.app.flashlearn.domain.model.ImportResult
 
@@ -11,6 +12,7 @@ import com.app.flashlearn.domain.model.ImportResult
  */
 interface BackupRepository {
     suspend fun exportToJson(): String
+    suspend fun exportToJson(mode: BackupMode): String = exportToJson()
 
     /** فقط می‌خواند و مقایسه می‌کند؛ هیچ تغییری در دیتابیس اعمال نمی‌کند (بند 46). */
     suspend fun previewImport(json: String): ImportPreview

@@ -6,6 +6,7 @@ import com.app.flashlearn.R
 import com.app.flashlearn.core.util.UiText
 import com.app.flashlearn.data.importexport.AutoBackupWriter
 import com.app.flashlearn.domain.model.ConflictResolution
+import com.app.flashlearn.domain.model.BackupMode
 import com.app.flashlearn.domain.model.ImportPreview
 import com.app.flashlearn.domain.model.ImportResult
 import com.app.flashlearn.domain.repository.BackupRepository
@@ -47,11 +48,11 @@ class BackupRestoreViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BackupRestoreUiState())
     val uiState: StateFlow<BackupRestoreUiState> = _uiState.asStateFlow()
 
-    fun export(onReady: (String) -> Unit) {
+    fun export(mode: BackupMode = BackupMode.FULL, onReady: (String) -> Unit) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isBusy = true, errorMessage = null)
             try {
-                val json = backupRepository.exportToJson()
+                val json = backupRepository.exportToJson(mode)
                 onReady(json)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(errorMessage = UiText.of(R.string.backup_export_error, e.message ?: ""))

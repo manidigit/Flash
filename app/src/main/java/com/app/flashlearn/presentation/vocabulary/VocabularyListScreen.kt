@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -81,6 +82,7 @@ fun VocabularyListScreen(
                 item { FilterChip(state.sortOrder == VocabularySortOrder.RECENT, { viewModel.onSortOrderSelected(VocabularySortOrder.RECENT) }, label = { Text("جدیدترین") }) }
                 item { FilterChip(state.sortOrder == VocabularySortOrder.ALPHABETICAL, { viewModel.onSortOrderSelected(VocabularySortOrder.ALPHABETICAL) }, label = { Text("الفبایی") }) }
                 item { FilterChip(false, onDuplicateWordsClick, label = { Text("تکراری‌ها") }) }
+                item { IconButton(onClick = viewModel::refreshParentheticalNotes) { Icon(Icons.Default.Refresh, contentDescription = "به‌روزرسانی یادداشت‌ها") } }
             }
         }
         if (state.categories.isNotEmpty()) {

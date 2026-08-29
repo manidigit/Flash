@@ -1,6 +1,7 @@
 package com.app.flashlearn.domain.usecase
 
 import com.app.flashlearn.core.util.DateTimeUtils
+import com.app.flashlearn.core.util.ParenthesesUtils
 import com.app.flashlearn.domain.model.Concept
 import com.app.flashlearn.domain.model.ContentItem
 import com.app.flashlearn.domain.model.ContentType
@@ -60,13 +61,22 @@ class ImportParsedEntriesUseCase @Inject constructor(
         for (entry in entries) {
             if (entry.sourceText.isBlank() || entry.targetText.isBlank()) continue
 
-            val sourceText = entry.sourceText.trim()
-            val targetText = entry.targetText.trim()
+            val sourceExtract = ParenthesesUtils.extract(entry.sourceText.trim())
+            val targetExtract = ParenthesesUtils.extract(entry.targetText.trim())
+            val sourceText = sourceExtract.cleanText
+            val targetText = targetExtract.cleanText
+            val extractedNotes = sourceExtract.notes + targetExtract.notes
+            val mergedEntryNotes = ParenthesesUtils.mergeNotes(entry.extraLabel, extractedNotes)
 
             try {
                 val existingConceptId = conceptRepository.findActiveConceptIdByText(sourceLanguage, sourceText)
 
                 if (existingConceptId != null) {
+                    val existingConcept = conceptRepository.getById(existingConceptId)
+                    if (existingConcept != null && !mergedEntryNotes.isNullOrBlank()) {
+                        val mergedNotes = ParenthesesUtils.mergeNotes(existingConcept.notes, listOf(mergedEntryNotes))
+                        if (mergedNotes != existingConcept.notes) conceptRepository.update(existingConcept.copy(notes = mergedNotes, updatedAt = now))
+                    }
                     val alreadyHasThisMeaning = conceptRepository.hasTranslation(existingConceptId, targetLanguage, targetText)
                     if (alreadyHasThisMeaning) {
                         duplicateCount++
@@ -89,7 +99,7 @@ class ImportParsedEntriesUseCase @Inject constructor(
                     active = true,
                     createdAt = now,
                     updatedAt = now,
-                    notes = entry.extraLabel,
+                    notes = mergedEntryNotes,
                     contents = listOf(
                         ContentItem(languageCode = sourceLanguage, text = sourceText),
                         ContentItem(languageCode = targetLanguage, text = targetText)

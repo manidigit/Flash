@@ -3,6 +3,7 @@ package com.app.flashlearn.presentation.add
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.core.util.DateTimeUtils
+import com.app.flashlearn.core.util.ParenthesesUtils
 import com.app.flashlearn.domain.model.Category
 import com.app.flashlearn.domain.model.Concept
 import com.app.flashlearn.domain.model.ContentItem
@@ -97,14 +98,21 @@ class AddManualViewModel @Inject constructor(
             _uiState.value = state.copy(isSaving = true)
             val now = DateTimeUtils.now()
             val tags = state.tagsText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-            val sourceText = state.sourceText.trim()
-            val targetText = state.targetText.trim()
+            val sourceExtract = ParenthesesUtils.extract(state.sourceText.trim())
+            val targetExtract = ParenthesesUtils.extract(state.targetText.trim())
+            val sourceText = sourceExtract.cleanText
+            val targetText = targetExtract.cleanText
+            val notes = ParenthesesUtils.mergeNotes(state.notes, sourceExtract.notes + targetExtract.notes)
 
             // بند 64 (رفع باگ «کلمه با چند معنی»): اگر این متن مبدأ از قبل به‌عنوان یک
             // Concept فعال وجود دارد، به‌جای ساخت یک Concept تکراری، همین معنی جدید به
             // همان کلمه اضافه می‌شود (مگر اینکه دقیقاً همان معنی از قبل هم موجود باشد).
             val existingConceptId = conceptRepository.findActiveConceptIdByText(state.sourceLanguage, sourceText)
             if (existingConceptId != null) {
+                val existingConcept = conceptRepository.getById(existingConceptId)
+                if (existingConcept != null && notes != existingConcept.notes) {
+                    conceptRepository.update(existingConcept.copy(notes = ParenthesesUtils.mergeNotes(existingConcept.notes, listOfNotNull(notes)), updatedAt = now))
+                }
                 val alreadyHasThisMeaning = conceptRepository.hasTranslation(existingConceptId, state.targetLanguage, targetText)
                 if (!alreadyHasThisMeaning) {
                     conceptRepository.addTranslation(
@@ -134,7 +142,7 @@ class AddManualViewModel @Inject constructor(
                 active = true,
                 createdAt = now,
                 updatedAt = now,
-                notes = state.notes.ifBlank { null },
+                notes = notes,
                 contents = listOf(
                     ContentItem(
                         languageCode = state.sourceLanguage,

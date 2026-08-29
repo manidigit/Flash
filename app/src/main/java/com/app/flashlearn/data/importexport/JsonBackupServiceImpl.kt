@@ -23,6 +23,7 @@ import com.app.flashlearn.database.entity.ReviewHistoryEntity
 import com.app.flashlearn.database.entity.ReviewSessionEntity
 import com.app.flashlearn.database.entity.TagEntity
 import com.app.flashlearn.domain.model.ConflictResolution
+import com.app.flashlearn.domain.model.BackupMode
 import com.app.flashlearn.domain.model.ImportPreview
 import com.app.flashlearn.domain.model.ImportResult
 import com.app.flashlearn.domain.repository.BackupRepository
@@ -120,6 +121,24 @@ class JsonBackupServiceImpl @Inject constructor(
                             .put("totalWrong", state.totalWrong)
                             .put("lastReviewedAt", state.lastReviewedAt)
                             .put("everFailed", state.everFailed)
+                            .put("dailyReviewCount", state.dailyReviewCount)
+                            .put("dailyCorrectCount", state.dailyCorrectCount)
+                            .put("dailyIncorrectCount", state.dailyIncorrectCount)
+                            .put("weeklyReviewCount", state.weeklyReviewCount)
+                            .put("weeklyCorrectCount", state.weeklyCorrectCount)
+                            .put("weeklyIncorrectCount", state.weeklyIncorrectCount)
+                            .put("monthlyReviewCount", state.monthlyReviewCount)
+                            .put("monthlyCorrectCount", state.monthlyCorrectCount)
+                            .put("monthlyIncorrectCount", state.monthlyIncorrectCount)
+                            .put("consecutiveCorrect", state.consecutiveCorrect)
+                            .put("consecutiveIncorrect", state.consecutiveIncorrect)
+                            .put("highestStageReached", state.highestStageReached)
+                            .put("weeklyToDailyReturns", state.weeklyToDailyReturns)
+                            .put("monthlyToDailyReturns", state.monthlyToDailyReturns)
+                            .put("monthlyCompletions", state.monthlyCompletions)
+                            .put("learnedCount", state.learnedCount)
+                            .put("lastReviewResult", state.lastReviewResult)
+                            .put("difficultyScore", state.difficultyScore)
                     )
                 }
 
@@ -145,8 +164,36 @@ class JsonBackupServiceImpl @Inject constructor(
         root.put("concepts", conceptsJson)
         root.put("learningStates", learningStatesJson)
         root.put("reviewHistory", historyJson)
+        root.put("settings", JSONArray().apply {
+            // All settings are exported as opaque key/value pairs so future settings are not lost.
+            appSettingsDao.getAll().forEach { put(JSONObject().put("key", it.key).put("value", it.value)) }
+        })
 
         return root.toString()
+    }
+
+    override suspend fun exportToJson(mode: BackupMode): String {
+        val full = JSONObject(exportToJson())
+        full.put("backupMode", mode.name)
+        when (mode) {
+            BackupMode.FULL -> Unit
+            BackupMode.VOCABULARY -> {
+                full.remove("learningStates"); full.remove("reviewHistory"); full.remove("settings")
+                val concepts = full.optJSONArray("concepts") ?: JSONArray()
+                for (i in 0 until concepts.length()) {
+                    val c = concepts.getJSONObject(i)
+                    c.remove("favorite")
+                    c.remove("active")
+                    c.remove("createdAt")
+                    c.remove("updatedAt")
+                    c.remove("tags")
+                }
+            }
+            BackupMode.LEARNING_PROGRESS -> {
+                full.remove("concepts"); full.remove("languages"); full.remove("categories")
+            }
+        }
+        return full.toString()
     }
 
     override suspend fun previewImport(json: String): ImportPreview {
@@ -283,6 +330,31 @@ class JsonBackupServiceImpl @Inject constructor(
             }
         }
 
+        if (root.optString("backupMode") == BackupMode.VOCABULARY.name) {
+            for ((_, conceptId) in uuidToConceptId) {
+                if (learningStateDao.getForConcept(conceptId) == null) {
+                    learningStateDao.insert(LearningStateEntity(conceptId = conceptId))
+                }
+            }
+        }
+
+        // Progress-only backup has no Concept payload; resolve UUIDs against the current DB.
+        root.optJSONArray("learningStates")?.let { statesArray ->
+            for (idx in 0 until statesArray.length()) {
+                val uuid = statesArray.getJSONObject(idx).getString("conceptUuid")
+                val id = conceptDao.getByUuid(uuid)?.id
+                if (id != null) uuidToConceptId[uuid] = id
+            }
+        }
+
+        // Restore settings when present.
+        root.optJSONArray("settings")?.let { settingsArray ->
+            for (idx in 0 until settingsArray.length()) {
+                val obj = settingsArray.getJSONObject(idx)
+                appSettingsDao.set(AppSettingsEntity(obj.getString("key"), obj.optString("value")))
+            }
+        }
+
         // Review Session ها (قبل از ReviewHistory چون Foreign Key دارد)
         root.optJSONArray("reviewHistory")?.let { historyArray ->
             val sessionIds = (0 until historyArray.length())
@@ -312,7 +384,25 @@ class JsonBackupServiceImpl @Inject constructor(
                         totalCorrect = obj.optInt("totalCorrect", 0),
                         totalWrong = obj.optInt("totalWrong", 0),
                         lastReviewedAt = if (obj.isNull("lastReviewedAt")) null else obj.getLong("lastReviewedAt"),
-                        everFailed = obj.optBoolean("everFailed", false)
+                        everFailed = obj.optBoolean("everFailed", false),
+                        dailyReviewCount = obj.optInt("dailyReviewCount", 0),
+                        dailyCorrectCount = obj.optInt("dailyCorrectCount", 0),
+                        dailyIncorrectCount = obj.optInt("dailyIncorrectCount", 0),
+                        weeklyReviewCount = obj.optInt("weeklyReviewCount", 0),
+                        weeklyCorrectCount = obj.optInt("weeklyCorrectCount", 0),
+                        weeklyIncorrectCount = obj.optInt("weeklyIncorrectCount", 0),
+                        monthlyReviewCount = obj.optInt("monthlyReviewCount", 0),
+                        monthlyCorrectCount = obj.optInt("monthlyCorrectCount", 0),
+                        monthlyIncorrectCount = obj.optInt("monthlyIncorrectCount", 0),
+                        consecutiveCorrect = obj.optInt("consecutiveCorrect", 0),
+                        consecutiveIncorrect = obj.optInt("consecutiveIncorrect", 0),
+                        highestStageReached = obj.optString("highestStageReached", "DAILY"),
+                        weeklyToDailyReturns = obj.optInt("weeklyToDailyReturns", 0),
+                        monthlyToDailyReturns = obj.optInt("monthlyToDailyReturns", 0),
+                        monthlyCompletions = obj.optInt("monthlyCompletions", 0),
+                        learnedCount = obj.optInt("learnedCount", 0),
+                        lastReviewResult = if (obj.isNull("lastReviewResult")) null else obj.optBoolean("lastReviewResult"),
+                        difficultyScore = obj.optInt("difficultyScore", 0)
                     )
                 )
             }

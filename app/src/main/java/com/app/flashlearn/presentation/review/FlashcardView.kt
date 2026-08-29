@@ -52,6 +52,7 @@ fun FlashcardView(
     front: ContentItem,
     backs: List<ContentItem>,
     tags: List<String>,
+    notes: String?,
     isFlipped: Boolean,
     onFlip: () -> Unit,
     onSwipeLeft: () -> Unit,
@@ -121,6 +122,9 @@ fun FlashcardView(
                     } else {
                         Column(Modifier.padding(top = Spacing.lg), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                             backs.forEachIndexed { index, back -> TranslationBlock(back, backs.size > 1, index + 1) }
+                            notes?.takeIf { it.isNotBlank() }?.let {
+                                Text("یادداشت: $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = Spacing.sm))
+                            }
                             if (tags.isNotEmpty()) Text(tags.joinToString(" · "), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                         }
                     }

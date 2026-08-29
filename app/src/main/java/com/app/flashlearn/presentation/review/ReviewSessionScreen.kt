@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -133,6 +134,7 @@ fun ReviewSessionScreen(
                             options = state.choiceOptions,
                             isLoading = state.isLoadingChoices,
                             selectedOption = state.selectedChoiceText,
+                            notes = concept.notes,
                             correctOptions = backs.map { it.text.trim().lowercase() }.toSet(),
                             onSelect = viewModel::selectChoice
                         )
@@ -143,6 +145,7 @@ fun ReviewSessionScreen(
                             front = front,
                             backs = backs,
                             tags = concept.tags,
+                            notes = concept.notes,
                             isFlipped = state.isFlipped,
                             onFlip = viewModel::flipCard,
                             onSwipeLeft = { viewModel.answer(isCorrect = false) },
@@ -203,6 +206,7 @@ private fun MultipleChoiceCard(
     options: List<String>,
     isLoading: Boolean,
     selectedOption: String?,
+    notes: String?,
     correctOptions: Set<String>,
     onSelect: (String) -> Unit
 ) {
@@ -225,6 +229,19 @@ private fun MultipleChoiceCard(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        if (!notes.isNullOrBlank()) {
+            var showHint by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            OutlinedButton(onClick = { showHint = !showHint }) {
+                Icon(Icons.Filled.Lightbulb, contentDescription = null)
+                Spacer(modifier = Modifier.width(Spacing.xs))
+                Text(if (showHint) "پنهان کردن راهنمایی" else "راهنمایی")
+            }
+            if (showHint) {
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                    Text("یادداشت: $notes", modifier = Modifier.padding(Spacing.md), color = MaterialTheme.colorScheme.onSecondaryContainer)
+                }
+            }
+        }
 
         if (isLoading) {
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

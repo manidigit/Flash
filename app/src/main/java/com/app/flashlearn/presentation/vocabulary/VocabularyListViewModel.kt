@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.domain.model.Category
 import com.app.flashlearn.domain.model.Concept
 import com.app.flashlearn.domain.model.VocabularySortOrder
+import com.app.flashlearn.core.util.ParenthesesUtils
 import com.app.flashlearn.domain.repository.CategoryRepository
 import com.app.flashlearn.domain.repository.ConceptRepository
 import com.app.flashlearn.domain.repository.LanguagePairRepository
@@ -133,3 +134,30 @@ class VocabularyListViewModel @Inject constructor(
             )
         }
 }
+
+    /** Migrates parenthetical annotations from legacy words/meanings into Concept.notes. */
+    fun refreshParentheticalNotes() {
+        viewModelScope.launch {
+            val allConcepts = mutableListOf<com.app.flashlearn.domain.model.Concept>()
+            var offset = 0
+            val limit = 100
+            while (true) {
+                val page = conceptRepository.getPage(limit, offset, sortOrder = VocabularySortOrder.RECENT, sortLanguageCode = _uiState.value.sourceLanguage)
+                if (page.isEmpty()) break
+                allConcepts += page
+                offset += page.size
+                if (page.size < limit) break
+            }
+            for (concept in allConcepts) {
+                val extracted = concept.contents.flatMap { ParenthesesUtils.extract(it.text).notes }
+                if (extracted.isNotEmpty()) {
+                    val cleanContents = concept.contents.map { c -> c.copy(text = ParenthesesUtils.extract(c.text).cleanText) }
+                    val notes = ParenthesesUtils.mergeNotes(concept.notes, extracted)
+                    if (notes != concept.notes || cleanContents != concept.contents) {
+                        conceptRepository.update(concept.copy(notes = notes, contents = cleanContents, updatedAt = System.currentTimeMillis()))
+                    }
+                }
+            }
+            loadFirstPage()
+        }
+    }
