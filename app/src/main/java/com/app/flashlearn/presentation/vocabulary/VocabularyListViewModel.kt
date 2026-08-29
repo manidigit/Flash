@@ -28,7 +28,9 @@ data class VocabularyListUiState(
     val isLoading: Boolean = true,
     val sourceLanguage: String = "es",
     val targetLanguage: String = "fa",
-    val endReached: Boolean = false
+    val endReached: Boolean = false,
+    val isRefreshingNotes: Boolean = false,
+    val refreshMessage: String? = null
 )
 
 /**
@@ -133,32 +135,83 @@ class VocabularyListViewModel @Inject constructor(
                 categoryId = state.selectedCategoryId
             )
         }
+}
 
-
-    /** Migrates parenthetical annotations from legacy words/meanings into Concept.notes. */
+    /**
+     * مهاجرت داده‌های قدیمی: پرانتزهای موجود در متن همه زبان‌ها را به Notes منتقل می‌کند
+     * و خود پرانتز را از متن حذف می‌کند. این عملیات روی کل کتابخانه انجام می‌شود، نه فقط
+     * آیتم‌های صفحه فعلی. همچنین نتیجه عملیات در UI اعلام می‌شود تا کاربر نداند دکمه
+     * بی‌اثر بوده یا خیر.
+     */
     fun refreshParentheticalNotes() {
+        if (_uiState.value.isRefreshingNotes) return
+
         viewModelScope.launch {
-            val allConcepts = mutableListOf<com.app.flashlearn.domain.model.Concept>()
-            var offset = 0
-            val limit = 100
-            while (true) {
-                val page = conceptRepository.getPage(limit, offset, sortOrder = VocabularySortOrder.RECENT, sortLanguageCode = _uiState.value.sourceLanguage)
-                if (page.isEmpty()) break
-                allConcepts += page
-                offset += page.size
-                if (page.size < limit) break
-            }
-            for (concept in allConcepts) {
-                val extracted = concept.contents.flatMap { ParenthesesUtils.extract(it.text).notes }
-                if (extracted.isNotEmpty()) {
-                    val cleanContents = concept.contents.map { c -> c.copy(text = ParenthesesUtils.extract(c.text).cleanText) }
+            _uiState.value = _uiState.value.copy(
+                isRefreshingNotes = true,
+                refreshMessage = null
+            )
+
+            try {
+                val allConcepts = mutableListOf<Concept>()
+                var offset = 0
+                val limit = 100
+
+                // همه صفحات را قبل از شروع update می‌خوانیم؛ چون update، updatedAt را عوض
+                // می‌کند و اگر همزمان با pagination انجام شود ممکن است آیتم‌ها جابه‌جا و
+                // بعضی کلمات جا بیفتند.
+                while (true) {
+                    val page = conceptRepository.getPage(
+                        limit = limit,
+                        offset = offset,
+                        categoryId = null,
+                        sortOrder = VocabularySortOrder.RECENT,
+                        sortLanguageCode = _uiState.value.sourceLanguage
+                    )
+                    if (page.isEmpty()) break
+                    allConcepts += page
+                    offset += page.size
+                    if (page.size < limit) break
+                }
+
+                var changedCount = 0
+                var extractedCount = 0
+
+                for (concept in allConcepts) {
+                    val extracted = concept.contents.flatMap { ParenthesesUtils.extract(it.text).notes }
+                    val cleanContents = concept.contents.map { content ->
+                        val extraction = ParenthesesUtils.extract(content.text)
+                        if (extraction.notes.isNotEmpty()) extractedCount += extraction.notes.size
+                        content.copy(text = extraction.cleanText)
+                    }
                     val notes = ParenthesesUtils.mergeNotes(concept.notes, extracted)
+
                     if (notes != concept.notes || cleanContents != concept.contents) {
-                        conceptRepository.update(concept.copy(notes = notes, contents = cleanContents, updatedAt = System.currentTimeMillis()))
+                        conceptRepository.update(
+                            concept.copy(
+                                notes = notes,
+                                contents = cleanContents,
+                                updatedAt = System.currentTimeMillis()
+                            )
+                        )
+                        changedCount++
                     }
                 }
+
+                loadFirstPage()
+                _uiState.value = _uiState.value.copy(
+                    isRefreshingNotes = false,
+                    refreshMessage = if (changedCount == 0) {
+                        "همه واژه‌ها بررسی شدند؛ مورد قدیمی برای انتقال پیدا نشد."
+                    } else {
+                        "$changedCount واژه به‌روزرسانی شد؛ $extractedCount یادداشت از پرانتزها منتقل شد."
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isRefreshingNotes = false,
+                    refreshMessage = "به‌روزرسانی انجام نشد: ${e.message ?: "خطای نامشخص"}"
+                )
             }
-            loadFirstPage()
         }
     }
-}

@@ -77,12 +77,31 @@ fun VocabularyListScreen(
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.button)
             )
         }
+        if (state.isRefreshingNotes) {
+            item {
+                Text("در حال بررسی واژه‌های قبلی و انتقال پرانتزها به یادداشت…", color = MaterialTheme.colorScheme.primary)
+            }
+        }
+        state.refreshMessage?.let { message ->
+            item { Text(message, color = MaterialTheme.colorScheme.primary) }
+        }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 item { FilterChip(state.sortOrder == VocabularySortOrder.RECENT, { viewModel.onSortOrderSelected(VocabularySortOrder.RECENT) }, label = { Text("جدیدترین") }) }
                 item { FilterChip(state.sortOrder == VocabularySortOrder.ALPHABETICAL, { viewModel.onSortOrderSelected(VocabularySortOrder.ALPHABETICAL) }, label = { Text("الفبایی") }) }
                 item { FilterChip(false, onDuplicateWordsClick, label = { Text("تکراری‌ها") }) }
-                item { IconButton(onClick = viewModel::refreshParentheticalNotes) { Icon(Icons.Default.Refresh, contentDescription = "به‌روزرسانی یادداشت‌ها") } }
+                item {
+                    IconButton(
+                        onClick = viewModel::refreshParentheticalNotes,
+                        enabled = !state.isRefreshingNotes
+                    ) {
+                        if (state.isRefreshingNotes) {
+                            CircularProgressIndicator()
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = "بررسی و انتقال پرانتزها به یادداشت")
+                        }
+                    }
+                }
             }
         }
         if (state.categories.isNotEmpty()) {

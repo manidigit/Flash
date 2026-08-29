@@ -44,7 +44,7 @@ import com.app.flashlearn.database.entity.TagEntity
         AppSettingsEntity::class
     ],
     version = 3,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class FlashLearnDatabase : RoomDatabase() {
 

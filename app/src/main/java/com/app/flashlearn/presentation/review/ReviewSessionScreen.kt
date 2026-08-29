@@ -28,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -230,17 +229,60 @@ private fun MultipleChoiceCard(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        if (!notes.isNullOrBlank()) {
-            var showHint by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-            OutlinedButton(onClick = { showHint = !showHint }) {
+        // راهنمایی و یادداشت باید در حالت چهارگزینه‌ای هم همیشه در دسترس باشند؛
+        // قبلاً راهنمایی فقط وقتی notes وجود داشت ساخته می‌شد و در نتیجه برای بسیاری
+        // از کلمات اصلاً دکمه‌ای دیده نمی‌شد.
+        var showHint by androidx.compose.runtime.remember(frontText) { androidx.compose.runtime.mutableStateOf(false) }
+        var showNote by androidx.compose.runtime.remember(frontText) { androidx.compose.runtime.mutableStateOf(false) }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+        ) {
+            OutlinedButton(
+                onClick = { showHint = !showHint },
+                modifier = Modifier.weight(1f)
+            ) {
                 Icon(Icons.Filled.Lightbulb, contentDescription = null)
                 Spacer(modifier = Modifier.width(Spacing.xs))
                 Text(if (showHint) "پنهان کردن راهنمایی" else "راهنمایی")
             }
-            if (showHint) {
-                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
-                    Text("یادداشت: $notes", modifier = Modifier.padding(Spacing.md), color = MaterialTheme.colorScheme.onSecondaryContainer)
-                }
+            OutlinedButton(
+                onClick = { showNote = !showNote },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(if (showNote) "پنهان کردن یادداشت" else "یادداشت")
+            }
+        }
+
+        if (showHint) {
+            val hint = correctOptions.firstOrNull()?.let { answer ->
+                val first = answer.firstOrNull()?.toString() ?: ""
+                "حرف اول ترجمه: $first  •  ${answer.length} حرف"
+            } ?: "راهنمایی در دسترس نیست"
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Text(
+                    hint,
+                    modifier = Modifier.padding(Spacing.md),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        if (showNote) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+            ) {
+                Text(
+                    notes?.takeIf { it.isNotBlank() } ?: "برای این واژه یادداشتی ثبت نشده است.",
+                    modifier = Modifier.padding(Spacing.md),
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    textAlign = TextAlign.Center
+                )
             }
         }
 
