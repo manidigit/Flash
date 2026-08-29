@@ -6,18 +6,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.app.flashlearn.R
+import com.app.flashlearn.ui.theme.Radius
 import com.app.flashlearn.ui.theme.Spacing
 
 @Composable
@@ -28,96 +36,55 @@ fun SettingsHomeScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    Column(Modifier.fillMaxSize().padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
+        Text("تنظیمات", style = MaterialTheme.typography.headlineLarge)
+        Text("FlashLearn را مطابق روش یادگیری خودت تنظیم کن.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(Spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
-    ) {
-        Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-
-        Text(stringResource(R.string.settings_theme_section), style = MaterialTheme.typography.titleMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-            ThemeMode.values().forEach { mode ->
-                OutlinedButton(
-                    onClick = { viewModel.setThemeMode(mode) },
-                    colors = if (mode == state.themeMode) {
-                        androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    } else {
-                        androidx.compose.material3.ButtonDefaults.outlinedButtonColors()
-                    }
-                ) {
-                    Text(stringResource(mode.labelRes()))
+        Card(shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.card)) {
+            Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                Text("ظاهر برنامه", style = MaterialTheme.typography.titleLarge)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    ThemeButton(ThemeMode.LIGHT, Icons.Default.LightMode, state.themeMode == ThemeMode.LIGHT, viewModel::setThemeMode, Modifier.weight(1f))
+                    ThemeButton(ThemeMode.DARK, Icons.Default.DarkMode, state.themeMode == ThemeMode.DARK, viewModel::setThemeMode, Modifier.weight(1f))
+                    ThemeButton(ThemeMode.SYSTEM, Icons.Default.BrightnessAuto, state.themeMode == ThemeMode.SYSTEM, viewModel::setThemeMode, Modifier.weight(1f))
                 }
             }
         }
 
-        Text(stringResource(R.string.settings_language_direction_section), style = MaterialTheme.typography.titleMedium)
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(Spacing.md)) {
-                val pair = state.activePair
-                Text(
-                    text = if (pair != null) {
-                        stringResource(
-                            R.string.settings_language_pair_format,
-                            pair.sourceLanguage.uppercase(),
-                            pair.targetLanguage.uppercase()
-                        )
-                    } else {
-                        stringResource(R.string.settings_language_pair_not_set)
-                    },
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Row(
-                    modifier = Modifier.padding(top = Spacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    OutlinedButton(onClick = viewModel::swapLanguageDirection, enabled = pair != null) {
-                        Text(stringResource(R.string.settings_swap_direction_button))
-                    }
-                    OutlinedButton(onClick = onChangeLanguagePair) {
-                        Text(stringResource(R.string.settings_change_languages_button))
-                    }
+        val pair = state.activePair
+        Card(onClick = onChangeLanguagePair, shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.card), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            Row(Modifier.fillMaxWidth().padding(Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Language, null, tint = MaterialTheme.colorScheme.primary)
+                Column(Modifier.weight(1f).padding(horizontal = Spacing.md)) {
+                    Text("جفت زبان فعال", style = MaterialTheme.typography.titleMedium)
+                    Text(if (pair != null) "${pair.sourceLanguage.uppercase()}  →  ${pair.targetLanguage.uppercase()}" else "تعیین نشده", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                Text("تغییر", color = MaterialTheme.colorScheme.primary)
             }
         }
 
-        Card(onClick = onOpenBackupRestore, modifier = Modifier.fillMaxWidth()) {
-            Text(
-                stringResource(R.string.settings_backup_restore_card),
-                modifier = Modifier.padding(Spacing.md),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        SettingsActionCard(Icons.Default.Storage, "پشتیبان‌گیری و بازیابی", "Export، Import و محافظت از داده‌ها", onOpenBackupRestore)
+        SettingsActionCard(Icons.Default.Security, "تنظیمات AI", "Endpoint، مدل و کلید API", onOpenAISettings)
 
-        Card(onClick = onOpenAISettings, modifier = Modifier.fillMaxWidth()) {
-            Text(
-                stringResource(R.string.settings_ai_settings_card),
-                modifier = Modifier.padding(Spacing.md),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-
-        // درخواست کاربر: بعد از هر Update، بتواند مطمئن شود نسخه جدید واقعاً نصب شده
-        // (مثلاً از نسخه ۴ به ۵ رفته یا نه). BuildConfig.VERSION_CODE و BUILD_TIME هر دو
-        // خودکار در زمان Build محاسبه می‌شوند (بند build.gradle.kts)، نیازی به یادآوری
-        // دستی برای بالا بردن شماره نسخه نیست.
-        Text(
-            text = stringResource(
-                R.string.settings_app_version,
-                com.app.flashlearn.BuildConfig.VERSION_CODE,
-                com.app.flashlearn.BuildConfig.BUILD_TIME
-            ),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = Spacing.sm)
-        )
+        Text("نسخه ${com.app.flashlearn.BuildConfig.VERSION_CODE}  •  ${com.app.flashlearn.BuildConfig.BUILD_TIME}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
-private fun ThemeMode.labelRes(): Int = when (this) {
-    ThemeMode.LIGHT -> R.string.theme_mode_light
-    ThemeMode.DARK -> R.string.theme_mode_dark
-    ThemeMode.SYSTEM -> R.string.theme_mode_system
+@Composable private fun ThemeButton(mode: ThemeMode, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, onSelect: (ThemeMode) -> Unit, modifier: Modifier) {
+    OutlinedButton(onClick = { onSelect(mode) }, modifier = modifier) {
+        Icon(icon, contentDescription = null)
+        Text(when (mode) { ThemeMode.LIGHT -> "روشن"; ThemeMode.DARK -> "تیره"; ThemeMode.SYSTEM -> "سیستم" }, modifier = Modifier.padding(start = Spacing.xs))
+    }
+}
+
+@Composable private fun SettingsActionCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.card)) {
+        Row(Modifier.padding(Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+            Column(Modifier.weight(1f).padding(horizontal = Spacing.md)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
 }

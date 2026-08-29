@@ -11,9 +11,17 @@ import androidx.compose.ui.unit.LayoutDirection
 
 private val LightColors = lightColorScheme(
     primary = PrimaryLight,
+    onPrimary = androidx.compose.ui.graphics.Color.White,
+    primaryContainer = androidx.compose.ui.graphics.Color(0xFFE9E7FF),
+    onPrimaryContainer = Color(0xFF26205E),
     secondary = SecondaryLight,
+    onSecondary = androidx.compose.ui.graphics.Color.White,
+    secondaryContainer = androidx.compose.ui.graphics.Color(0xFFD8F7F2),
+    onSecondaryContainer = Color(0xFF073C36),
+    tertiary = PinkLight,
     background = BackgroundLight,
     surface = SurfaceLight,
+    surfaceVariant = SurfaceAltLight,
     error = ErrorLight,
     onBackground = TextPrimaryLight,
     onSurface = TextPrimaryLight,
@@ -22,19 +30,23 @@ private val LightColors = lightColorScheme(
 
 private val DarkColors = darkColorScheme(
     primary = PrimaryDark,
+    onPrimary = Color(0xFF29224E),
+    primaryContainer = Color(0xFF38306D),
+    onPrimaryContainer = Color(0xFFE9E7FF),
     secondary = SecondaryDark,
+    onSecondary = Color(0xFF003731),
+    secondaryContainer = Color(0xFF174D46),
+    onSecondaryContainer = Color(0xFFD8F7F2),
+    tertiary = PinkDark,
     background = BackgroundDark,
     surface = SurfaceDark,
+    surfaceVariant = SurfaceAltDark,
     error = ErrorDark,
     onBackground = TextPrimaryDark,
     onSurface = TextPrimaryDark,
     onSurfaceVariant = TextSecondaryDark
 )
 
-/**
- * تم اصلی اپلیکیشن با پشتیبانی از Light/Dark/System Default (بند 6).
- * useDarkTheme=null یعنی از تنظیم سیستم پیروی کن؛ true/false یعنی کاربر صریحاً انتخاب کرده (بند 54).
- */
 @Composable
 fun FlashLearnTheme(
     useDarkTheme: Boolean? = null,
@@ -43,21 +55,19 @@ fun FlashLearnTheme(
     val darkTheme = useDarkTheme ?: isSystemInDarkTheme()
     val colorScheme = if (darkTheme) DarkColors else LightColors
     val statusColors = if (darkTheme) {
-        StatusColors(success = SuccessDark, warning = WarningDark, due = DueDark, learned = LearnedDark)
+        StatusColors(SuccessDark, WarningDark, DueDark, LearnedDark)
     } else {
-        StatusColors(success = SuccessLight, warning = WarningLight, due = DueLight, learned = LearnedLight)
+        StatusColors(SuccessLight, WarningLight, DueLight, LearnedLight)
     }
 
     CompositionLocalProvider(
         LocalStatusColors provides statusColors,
-        // رفع باگ: جهت UI باید همیشه راست‌به‌چپ باشد چون تمام محتوای اپ فارسی است،
-        // مستقل از زبان سیستم گوشی (که ممکن است انگلیسی باشد و باعث چپ‌چین شدن منوها،
-        // آیکون‌ها، و ترتیب نمایش اعداد/کلمات لاتین وسط جمله فارسی می‌شد).
         LocalLayoutDirection provides LayoutDirection.Rtl
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = FlashLearnTypography,
+            shapes = FlashLearnShapes,
             content = content
         )
     }

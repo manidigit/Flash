@@ -46,7 +46,8 @@ fun FlashLearnNavGraph(
                 onStartReview = { stage ->
                     navController.navigate(Routes.reviewSession(stage.name))
                 },
-                onOpenStatistics = { navController.navigate(Routes.STATISTICS) }
+                onOpenStatistics = { navController.navigate(Routes.STATISTICS) },
+                onAddWord = { navController.navigate(Routes.ADD_HOME) }
             )
         }
 

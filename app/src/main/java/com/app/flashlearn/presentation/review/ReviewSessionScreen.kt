@@ -243,7 +243,7 @@ private fun MultipleChoiceCard(
                         val containerColor = when {
                             showFeedback && isCorrectOption -> FlashLearnExtras.status.success
                             showFeedback && isSelectedOption && !isCorrectOption -> MaterialTheme.colorScheme.error
-                            else -> CardDefaults.cardColors().containerColor
+                            else -> MaterialTheme.colorScheme.surface
                         }
                         Card(
                             // به‌جای Card(enabled=false)، تپ‌های اضافه بعد از انتخاب اول را

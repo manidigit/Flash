@@ -7,6 +7,7 @@ import com.app.flashlearn.domain.model.Difficulty
 import com.app.flashlearn.domain.model.LearningStage
 import com.app.flashlearn.domain.repository.ConceptRepository
 import com.app.flashlearn.domain.repository.LearningStateRepository
+import com.app.flashlearn.domain.repository.LanguagePairRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,8 @@ data class HomeUiState(
     val dueWeekly: Int = 0,
     val dueMonthly: Int = 0,
     val difficultySummary: Map<Difficulty, Int> = emptyMap(),
+    val sourceLanguage: String = "",
+    val targetLanguage: String = "",
     val isLoading: Boolean = true
 ) {
     /** طبق بند 37: اگر هیچ آیتمی آماده نباشد "You're all caught up!" نمایش داده شود. */
@@ -30,7 +33,8 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val conceptRepository: ConceptRepository,
-    private val learningStateRepository: LearningStateRepository
+    private val learningStateRepository: LearningStateRepository,
+    private val languagePairRepository: LanguagePairRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -41,6 +45,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refresh() {
+        viewModelScope.launch {
+            languagePairRepository.observeActivePair().collect { pair ->
+                val current = _uiState.value
+                _uiState.value = current.copy(sourceLanguage = pair?.sourceLanguage.orEmpty(), targetLanguage = pair?.targetLanguage.orEmpty())
+            }
+        }
         viewModelScope.launch {
             val now = DateTimeUtils.now()
             val daily = learningStateRepository.countDue(LearningStage.DAILY, now)
@@ -55,6 +65,8 @@ class HomeViewModel @Inject constructor(
                     dueWeekly = weekly,
                     dueMonthly = monthly,
                     difficultySummary = difficultySummary,
+                    sourceLanguage = _uiState.value.sourceLanguage,
+                    targetLanguage = _uiState.value.targetLanguage,
                     isLoading = false
                 )
             }
