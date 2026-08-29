@@ -20,6 +20,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,15 +41,16 @@ fun ReviewTypeSelectScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     var selectedMode by remember { mutableStateOf(ReviewMode.MULTIPLE_CHOICE) }
+    data class ReviewType(val type: String, val title: String, val subtitle: String, val icon: ImageVector)
     val types = listOf(
-        Triple("DAILY", "روزانه", "حافظه فعال", Icons.Default.LightMode),
-        Triple("WEEKLY", "هفتگی", "تقویت ماندگاری", Icons.Default.CalendarMonth),
-        Triple("MONTHLY", "ماهانه", "حافظه بلندمدت", Icons.Default.NightsStay),
-        Triple("RANDOM", "تصادفی", "هر چیزی که آماده است", Icons.Default.Casino),
-        Triple("EASY", "آسان", "اعتمادبه‌نفس سریع", Icons.Default.Star),
-        Triple("MEDIUM", "متوسط", "تمرین متعادل", Icons.Default.School),
-        Triple("HARD", "سخت", "واژه‌های چالش‌برانگیز", Icons.Default.Whatshot),
-        Triple("VERY_HARD", "خیلی سخت", "آخرین خط دفاع حافظه", Icons.Default.AutoAwesome)
+        ReviewType("DAILY", "روزانه", "حافظه فعال", Icons.Default.LightMode),
+        ReviewType("WEEKLY", "هفتگی", "تقویت ماندگاری", Icons.Default.CalendarMonth),
+        ReviewType("MONTHLY", "ماهانه", "حافظه بلندمدت", Icons.Default.NightsStay),
+        ReviewType("RANDOM", "تصادفی", "هر چیزی که آماده است", Icons.Default.Casino),
+        ReviewType("EASY", "آسان", "اعتمادبه‌نفس سریع", Icons.Default.Star),
+        ReviewType("MEDIUM", "متوسط", "تمرین متعادل", Icons.Default.School),
+        ReviewType("HARD", "سخت", "واژه‌های چالش‌برانگیز", Icons.Default.Whatshot),
+        ReviewType("VERY_HARD", "خیلی سخت", "آخرین خط دفاع حافظه", Icons.Default.AutoAwesome)
     )
 
     LazyColumn(
@@ -78,7 +80,11 @@ fun ReviewTypeSelectScreen(
             }
         }
         item { SectionHeader("جلسه خودت را انتخاب کن") }
-        items(types, key = { it.first }) { (type, title, subtitle, icon) ->
+        items(types, key = { it.type }) { item ->
+            val type = item.type
+            val title = item.title
+            val subtitle = item.subtitle
+            val icon = item.icon
             val c = state.counts[type]
             val count = if (c?.due != null) "${c.due} آماده از ${c.total}" else "${c?.total ?: 0} واژه"
             ReviewModeCard(icon, title, subtitle, count, false) { onStart(type, state.selectedCategoryId, selectedMode.name) }
