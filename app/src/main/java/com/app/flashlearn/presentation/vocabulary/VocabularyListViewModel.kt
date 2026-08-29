@@ -133,7 +133,7 @@ class VocabularyListViewModel @Inject constructor(
                 categoryId = state.selectedCategoryId
             )
         }
-}
+
 
     /** Migrates parenthetical annotations from legacy words/meanings into Concept.notes. */
     fun refreshParentheticalNotes() {
@@ -161,3 +161,4 @@ class VocabularyListViewModel @Inject constructor(
             loadFirstPage()
         }
     }
+}
