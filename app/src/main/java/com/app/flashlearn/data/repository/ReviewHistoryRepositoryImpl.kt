@@ -1,7 +1,9 @@
 package com.app.flashlearn.data.repository
 
+import com.app.flashlearn.data.mapper.toDomain
 import com.app.flashlearn.database.dao.ReviewHistoryDao
 import com.app.flashlearn.database.entity.ReviewHistoryEntity
+import com.app.flashlearn.domain.model.ReviewHistory
 import com.app.flashlearn.domain.model.ReviewOutcome
 import com.app.flashlearn.domain.repository.ReviewHistoryRepository
 import javax.inject.Inject
@@ -39,4 +41,7 @@ class ReviewHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun countTotalBetween(from: Long, to: Long): Int =
         dao.countTotalBetween(from, to)
+
+    override suspend fun getForConcept(conceptId: Long): List<ReviewHistory> =
+        dao.getForConcept(conceptId).map { it.toDomain() }
 }

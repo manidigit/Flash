@@ -104,6 +104,8 @@
     <string name="review_type_filter_by_category">فیلتر بر اساس دسته‌بندی (اختیاری)</string>
     <string name="review_type_all_categories">همه</string>
     <string name="review_type_section_title">نوع مرور</string>
+    <string name="review_type_count_with_due">%1$d کلمه — %2$d آماده مرور</string>
+    <string name="review_type_count_total_only">%1$d کلمه</string>
 
     <!-- Review Session -->
     <string name="review_session_exit">خروج از مرور</string>
@@ -192,6 +194,21 @@
     <string name="concept_detail_save_changes">ذخیره تغییرات</string>
     <string name="concept_detail_delete_confirm_title">حذف این کلمه؟</string>
     <string name="concept_detail_delete_confirm_body">این کلمه از لیست‌های مرور حذف می‌شود، اما تاریخچه مرور آن برای همیشه نگه داشته می‌شود.</string>
+    <string name="concept_detail_debug_section">آمار و جزئیات یادگیری (دیباگ)</string>
+    <string name="concept_detail_debug_stage">مرحله فعلی</string>
+    <string name="concept_detail_debug_difficulty">سطح سختی</string>
+    <string name="concept_detail_debug_score">امتیاز خام سختی</string>
+    <string name="concept_detail_debug_total">مجموع درست / کل</string>
+    <string name="concept_detail_debug_daily">روزانه (درست/غلط/کل)</string>
+    <string name="concept_detail_debug_weekly">هفتگی (درست/غلط/کل)</string>
+    <string name="concept_detail_debug_monthly">ماهانه (درست/غلط/کل)</string>
+    <string name="concept_detail_debug_consecutive_correct">درست پشت‌سرهم فعلی</string>
+    <string name="concept_detail_debug_consecutive_incorrect">غلط پشت‌سرهم فعلی</string>
+    <string name="concept_detail_debug_weekly_returns">بازگشت از هفتگی به روزانه</string>
+    <string name="concept_detail_debug_monthly_returns">بازگشت از ماهانه به روزانه</string>
+    <string name="concept_detail_debug_highest_stage">بالاترین مرحله رسیده</string>
+    <string name="concept_detail_debug_learned_count">دفعات رسیدن به یادگرفته‌شده</string>
+    <string name="concept_detail_debug_history_title">تاریخچه کامل مرور (%1$d مورد)</string>
 
     <!-- Vocabulary List -->
     <string name="vocabulary_search_placeholder">جستجو در واژگان...</string>

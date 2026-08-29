@@ -7,8 +7,12 @@ import com.app.flashlearn.core.util.DateTimeUtils
 import com.app.flashlearn.domain.model.Category
 import com.app.flashlearn.domain.model.Concept
 import com.app.flashlearn.domain.model.ContentItem
+import com.app.flashlearn.domain.model.LearningState
+import com.app.flashlearn.domain.model.ReviewHistory
 import com.app.flashlearn.domain.repository.CategoryRepository
 import com.app.flashlearn.domain.repository.ConceptRepository
+import com.app.flashlearn.domain.repository.LearningStateRepository
+import com.app.flashlearn.domain.repository.ReviewHistoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +36,12 @@ data class ConceptDetailUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val saved: Boolean = false,
-    val deleted: Boolean = false
+    val deleted: Boolean = false,
+    // بند «ADMIN / DEBUG INFORMATION»: آمار کامل یادگیری و تاریخچه مرور این کلمه، برای
+    // بررسی این‌که الگوریتم طبقه‌بندی سختی واقعاً درست کار می‌کند.
+    val learningState: LearningState? = null,
+    val reviewHistory: List<ReviewHistory> = emptyList(),
+    val showDebugInfo: Boolean = false
 )
 
 /**
@@ -43,7 +52,9 @@ data class ConceptDetailUiState(
 class ConceptDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val conceptRepository: ConceptRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val learningStateRepository: LearningStateRepository,
+    private val reviewHistoryRepository: ReviewHistoryRepository
 ) : ViewModel() {
 
     private val conceptId: Long = checkNotNull(savedStateHandle.get<Long>("conceptId"))
@@ -80,6 +91,15 @@ class ConceptDetailViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(categories = categories)
             }
         }
+        viewModelScope.launch {
+            val learningState = learningStateRepository.get(conceptId)
+            val history = reviewHistoryRepository.getForConcept(conceptId)
+            _uiState.value = _uiState.value.copy(learningState = learningState, reviewHistory = history)
+        }
+    }
+
+    fun toggleDebugInfo() {
+        _uiState.value = _uiState.value.copy(showDebugInfo = !_uiState.value.showDebugInfo)
     }
 
     fun onSourceTextChanged(value: String) { _uiState.value = _uiState.value.copy(sourceText = value) }

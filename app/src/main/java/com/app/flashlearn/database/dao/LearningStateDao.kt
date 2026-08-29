@@ -77,6 +77,53 @@ interface LearningStateDao {
     )
     suspend fun getLearnedInCategory(categoryId: Long, limit: Int, offset: Int): List<LearningStateEntity>
 
+    @Query("SELECT COUNT(*) FROM learning_states WHERE stage = :stage")
+    suspend fun countByStage(stage: String): Int
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM learning_states
+        INNER JOIN concepts ON concepts.id = learning_states.conceptId
+        WHERE learning_states.stage = :stage AND concepts.categoryId = :categoryId
+        """
+    )
+    suspend fun countByStageInCategory(stage: String, categoryId: Long): Int
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM learning_states
+        INNER JOIN concepts ON concepts.id = learning_states.conceptId
+        WHERE learning_states.stage = :stage
+          AND (learning_states.nextReviewAt IS NULL OR learning_states.nextReviewAt <= :now)
+          AND concepts.categoryId = :categoryId
+        """
+    )
+    suspend fun countDueForStageInCategory(stage: String, now: Long, categoryId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM learning_states WHERE difficulty = :difficulty")
+    suspend fun countByDifficultyTotal(difficulty: String): Int
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM learning_states
+        INNER JOIN concepts ON concepts.id = learning_states.conceptId
+        WHERE learning_states.difficulty = :difficulty AND concepts.categoryId = :categoryId
+        """
+    )
+    suspend fun countByDifficultyTotalInCategory(difficulty: String, categoryId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM learning_states WHERE stage = 'LEARNED'")
+    suspend fun countLearnedTotal(): Int
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM learning_states
+        INNER JOIN concepts ON concepts.id = learning_states.conceptId
+        WHERE learning_states.stage = 'LEARNED' AND concepts.categoryId = :categoryId
+        """
+    )
+    suspend fun countLearnedTotalInCategory(categoryId: Long): Int
+
     @Query(
         """
         SELECT difficulty, COUNT(*) as count FROM learning_states

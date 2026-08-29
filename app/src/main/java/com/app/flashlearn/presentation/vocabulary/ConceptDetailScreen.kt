@@ -1,5 +1,6 @@
 package com.app.flashlearn.presentation.vocabulary
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -165,6 +167,78 @@ fun ConceptDetailScreen(
             }
         }
 
+        // بند «ADMIN / DEBUG INFORMATION»: آمار کامل یادگیری و کل تاریخچه مرور این کلمه،
+        // برای بررسی این‌که الگوریتم طبقه‌بندی سختی سازگار واقعاً درست عمل می‌کند. پیش‌فرض
+        // بسته است تا فضای صفحه را برای کاربر عادی اشغال نکند.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { viewModel.toggleDebugInfo() },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.concept_detail_debug_section), style = MaterialTheme.typography.titleMedium)
+            Text(if (state.showDebugInfo) "▲" else "▼", style = MaterialTheme.typography.bodyMedium)
+        }
+
+        if (state.showDebugInfo) {
+            val ls = state.learningState
+            if (ls != null) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_stage), ls.stage.name)
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_difficulty), ls.difficulty.name)
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_score), ls.difficultyScore.toString())
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_total), "${ls.totalCorrect} / ${ls.totalCorrect + ls.totalWrong}")
+                        DebugStatRow(
+                            stringResource(R.string.concept_detail_debug_daily),
+                            "${ls.dailyCorrectCount}✓ ${ls.dailyIncorrectCount}✗ (${ls.dailyReviewCount})"
+                        )
+                        DebugStatRow(
+                            stringResource(R.string.concept_detail_debug_weekly),
+                            "${ls.weeklyCorrectCount}✓ ${ls.weeklyIncorrectCount}✗ (${ls.weeklyReviewCount})"
+                        )
+                        DebugStatRow(
+                            stringResource(R.string.concept_detail_debug_monthly),
+                            "${ls.monthlyCorrectCount}✓ ${ls.monthlyIncorrectCount}✗ (${ls.monthlyReviewCount})"
+                        )
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_consecutive_correct), ls.consecutiveCorrect.toString())
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_consecutive_incorrect), ls.consecutiveIncorrect.toString())
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_weekly_returns), ls.weeklyToDailyReturns.toString())
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_monthly_returns), ls.monthlyToDailyReturns.toString())
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_highest_stage), ls.highestStageReached.name)
+                        DebugStatRow(stringResource(R.string.concept_detail_debug_learned_count), ls.learnedCount.toString())
+                    }
+                }
+
+                Text(
+                    stringResource(R.string.concept_detail_debug_history_title, state.reviewHistory.size),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = Spacing.sm)
+                )
+                state.reviewHistory.forEach { entry ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${entry.reviewStage}: ${entry.previousStatus}→${entry.newStatus}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = if (entry.isCorrect) "✓" else "✗",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (entry.isCorrect) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             OutlinedButton(onClick = { showDeleteConfirm = true }) {
                 Text(stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
@@ -194,5 +268,16 @@ fun ConceptDetailScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun DebugStatRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
     }
 }

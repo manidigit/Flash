@@ -1,6 +1,7 @@
 package com.app.flashlearn.presentation.review
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,12 +105,22 @@ fun ReviewTypeSelectScreen(
         item { Text(stringResource(R.string.review_type_section_title), style = MaterialTheme.typography.titleMedium) }
 
         items(types) { (type, label) ->
+            val counts = state.counts[type]
             Card(onClick = { onStart(type, state.selectedCategoryId, selectedMode.name) }) {
-                Text(
-                    text = label,
-                    modifier = Modifier.fillMaxWidth().padding(Spacing.md),
-                    style = MaterialTheme.typography.bodyLarge
-                )
+                Column(modifier = Modifier.fillMaxWidth().padding(Spacing.md)) {
+                    Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                    if (counts != null) {
+                        Text(
+                            text = if (counts.due != null) {
+                                stringResource(R.string.review_type_count_with_due, counts.total, counts.due)
+                            } else {
+                                stringResource(R.string.review_type_count_total_only, counts.total)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }
