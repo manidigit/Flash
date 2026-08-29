@@ -74,118 +74,102 @@ fun AddPasteTextScreen(
 
     Column(modifier = Modifier.fillMaxSize().padding(Spacing.lg)) {
         Text(stringResource(R.string.add_paste_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text(
-            stringResource(R.string.add_paste_subtitle),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.sm)
-        )
 
-        OutlinedTextField(
-            value = state.rawText,
-            onValueChange = viewModel::onRawTextChanged,
-            modifier = Modifier.fillMaxWidth().height(140.dp),
-            placeholder = { Text(stringResource(R.string.add_paste_placeholder)) }
-        )
-
-        val selectedCategoryName = state.categories.firstOrNull { it.id == state.selectedCategoryId }?.name
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = Spacing.sm)
-                .clickable { categorySectionExpanded = !categorySectionExpanded },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        if (state.entries.isEmpty()) {
             Text(
-                text = stringResource(R.string.add_paste_category_section) +
-                    (selectedCategoryName?.let { " - $it" } ?: ""),
-                style = MaterialTheme.typography.titleMedium
+                stringResource(R.string.add_paste_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.sm)
             )
-            Text(
-                text = if (categorySectionExpanded) "▲" else "▼",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
 
-        if (categorySectionExpanded) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                modifier = Modifier.padding(top = Spacing.xs)
-            ) {
-                item {
-                    FilterChip(
-                        selected = state.selectedCategoryId == null,
-                        onClick = { viewModel.onCategorySelected(null) },
-                        label = { Text(stringResource(R.string.add_paste_no_category)) }
-                    )
-                }
-                items(state.categories, key = { it.id }) { category ->
-                    FilterChip(
-                        selected = state.selectedCategoryId == category.id,
-                        onClick = {
-                            viewModel.onCategorySelected(
-                                if (state.selectedCategoryId == category.id) null else category.id
-                            )
-                        },
-                        label = { Text(category.name) }
-                    )
-                }
-            }
+            OutlinedTextField(
+                value = state.rawText,
+                onValueChange = viewModel::onRawTextChanged,
+                modifier = Modifier.fillMaxWidth().height(150.dp),
+                placeholder = { Text(stringResource(R.string.add_paste_placeholder)) }
+            )
+
+            val selectedCategoryName = state.categories.firstOrNull { it.id == state.selectedCategoryId }?.name
             Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                modifier = Modifier.padding(top = Spacing.xs)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Spacing.sm)
+                    .clickable { categorySectionExpanded = !categorySectionExpanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
-                    value = newCategoryText,
-                    onValueChange = { newCategoryText = it },
-                    label = { Text(stringResource(R.string.add_manual_new_category_label)) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
+                Text(
+                    text = stringResource(R.string.add_paste_category_section) + (selectedCategoryName?.let { " - $it" } ?: ""),
+                    style = MaterialTheme.typography.titleMedium
                 )
-                Button(
-                    onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
-                    enabled = newCategoryText.isNotBlank()
+                Text(if (categorySectionExpanded) "▲" else "▼", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            if (categorySectionExpanded) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.padding(top = Spacing.xs)
                 ) {
-                    Text(stringResource(R.string.action_add))
+                    item {
+                        FilterChip(
+                            selected = state.selectedCategoryId == null,
+                            onClick = { viewModel.onCategorySelected(null) },
+                            label = { Text(stringResource(R.string.add_paste_no_category)) }
+                        )
+                    }
+                    items(state.categories, key = { it.id }) { category ->
+                        FilterChip(
+                            selected = state.selectedCategoryId == category.id,
+                            onClick = { viewModel.onCategorySelected(if (state.selectedCategoryId == category.id) null else category.id) },
+                            label = { Text(category.name) }
+                        )
+                    }
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.padding(top = Spacing.xs)
+                ) {
+                    OutlinedTextField(
+                        value = newCategoryText,
+                        onValueChange = { newCategoryText = it },
+                        label = { Text(stringResource(R.string.add_manual_new_category_label)) },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    Button(
+                        onClick = { viewModel.createCategory(newCategoryText); newCategoryText = "" },
+                        enabled = newCategoryText.isNotBlank()
+                    ) { Text(stringResource(R.string.action_add)) }
                 }
             }
-        }
 
-        Button(
-            onClick = viewModel::parse,
-            enabled = state.rawText.isNotBlank(),
-            modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)
-        ) {
-            Text(stringResource(R.string.add_paste_parse_button))
-        }
-
-        state.errorMessage?.let {
-            Text(it.asString(), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = Spacing.xs))
-        }
-
-        if (state.importedCount != null && (state.duplicateCount > 0 || state.translationsAddedCount > 0)) {
-            Text(
-                stringResource(
-                    R.string.add_import_result_full,
-                    state.importedCount ?: 0,
-                    state.translationsAddedCount,
-                    state.duplicateCount
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = Spacing.sm)
-            )
-            Button(onClick = onImported, modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)) {
-                Text(stringResource(R.string.action_confirm))
+            Button(
+                onClick = viewModel::parse,
+                enabled = state.rawText.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)
+            ) { Text(stringResource(R.string.add_paste_parse_button)) }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs, bottom = Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.add_paste_preview_count, state.includedCount, state.entries.size),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        "برای ویرایش، متن هر ردیف را مستقیم تغییر بده.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                OutlinedButton(onClick = { viewModel.onRawTextChanged(state.rawText) }) {
+                    Text("بازگشت")
+                }
             }
-        }
-
-        if (state.entries.isNotEmpty()) {
-            Text(
-                stringResource(R.string.add_paste_preview_count, state.includedCount, state.entries.size),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = Spacing.md, bottom = Spacing.sm)
-            )
 
             LazyColumn(
                 modifier = Modifier.weight(1f),
@@ -210,6 +194,21 @@ fun AddPasteTextScreen(
                     if (state.isImporting) stringResource(R.string.add_paste_importing)
                     else stringResource(R.string.add_paste_import_all_button, state.includedCount)
                 )
+            }
+        }
+
+        state.errorMessage?.let {
+            Text(it.asString(), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = Spacing.xs))
+        }
+
+        if (state.importedCount != null && (state.duplicateCount > 0 || state.translationsAddedCount > 0)) {
+            Text(
+                stringResource(R.string.add_import_result_full, state.importedCount ?: 0, state.translationsAddedCount, state.duplicateCount),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = Spacing.sm)
+            )
+            Button(onClick = onImported, modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)) {
+                Text(stringResource(R.string.action_confirm))
             }
         }
     }
@@ -253,12 +252,16 @@ private fun EntryRow(
                     OutlinedTextField(
                         value = entry.sourceText,
                         onValueChange = { onEdit(it, entry.targetText) },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2,
+                        maxLines = 4
                     )
                     OutlinedTextField(
                         value = entry.targetText,
                         onValueChange = { onEdit(entry.sourceText, it) },
-                        modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs)
+                        modifier = Modifier.fillMaxWidth().padding(top = Spacing.xs),
+                        minLines = 2,
+                        maxLines = 4
                     )
                 }
                 IconButton(onClick = onRemove) {
