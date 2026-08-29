@@ -135,7 +135,6 @@ class VocabularyListViewModel @Inject constructor(
                 categoryId = state.selectedCategoryId
             )
         }
-}
 
     /**
      * مهاجرت داده‌های قدیمی: پرانتزهای موجود در متن همه زبان‌ها را به Notes منتقل می‌کند
@@ -215,3 +214,4 @@ class VocabularyListViewModel @Inject constructor(
             }
         }
     }
+}

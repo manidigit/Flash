@@ -28,6 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -232,8 +234,8 @@ private fun MultipleChoiceCard(
         // راهنمایی و یادداشت باید در حالت چهارگزینه‌ای هم همیشه در دسترس باشند؛
         // قبلاً راهنمایی فقط وقتی notes وجود داشت ساخته می‌شد و در نتیجه برای بسیاری
         // از کلمات اصلاً دکمه‌ای دیده نمی‌شد.
-        var showHint by androidx.compose.runtime.remember(frontText) { androidx.compose.runtime.mutableStateOf(false) }
-        var showNote by androidx.compose.runtime.remember(frontText) { androidx.compose.runtime.mutableStateOf(false) }
+        var showHint by remember(frontText) { mutableStateOf(false) }
+        var showNote by remember(frontText) { mutableStateOf(false) }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
