@@ -2,39 +2,26 @@ package com.app.flashlearn.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.flashlearn.domain.usecase.GetDailyReviewCardsUseCase
-import com.app.flashlearn.domain.usecase.GetWeeklyReviewCardsUseCase
-import com.app.flashlearn.domain.usecase.GetMonthlyReviewCardsUseCase
-import com.app.flashlearn.domain.usecase.GetLearnedCardsUseCase
-import com.app.flashlearn.domain.usecase.GetStatisticsUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 // ============ HOME SCREEN ============
 
 data class HomeUiState(
-    val todayCardsReady: Int = 0,
-    val todayTotalCards: Int = 0,
-    val streak: Int = 0,
-    val masteredCount: Int = 0,
-    val dailyReady: Int = 0,
-    val weeklyReady: Int = 0,
-    val monthlyReady: Int = 0,
+    val todayCardsReady: Int = 20,
+    val todayTotalCards: Int = 28,
+    val streak: Int = 7,
+    val masteredCount: Int = 324,
+    val dailyReady: Int = 12,
+    val weeklyReady: Int = 8,
+    val monthlyReady: Int = 3,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
-@HiltViewModel
-class HomeViewModel @Inject constructor(
-    private val getDailyReviewCardsUseCase: GetDailyReviewCardsUseCase,
-    private val getWeeklyReviewCardsUseCase: GetWeeklyReviewCardsUseCase,
-    private val getMonthlyReviewCardsUseCase: GetMonthlyReviewCardsUseCase,
-    private val getStatisticsUseCase: GetStatisticsUseCase
-) : ViewModel() {
+class HomeViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -47,22 +34,15 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val dailyCards = getDailyReviewCardsUseCase()
-                val weeklyCards = getWeeklyReviewCardsUseCase()
-                val monthlyCards = getMonthlyReviewCardsUseCase()
-                val statistics = getStatisticsUseCase()
-
-                val todayTotal = dailyCards.size
-                val todayReady = dailyCards.size
-
+                // Mock data - replace with real use cases later
                 _uiState.value = HomeUiState(
-                    todayCardsReady = todayReady,
-                    todayTotalCards = todayTotal,
-                    streak = statistics.streak,
-                    masteredCount = statistics.masteredCount,
-                    dailyReady = dailyCards.size,
-                    weeklyReady = weeklyCards.size,
-                    monthlyReady = monthlyCards.size,
+                    todayCardsReady = 20,
+                    todayTotalCards = 28,
+                    streak = 7,
+                    masteredCount = 324,
+                    dailyReady = 12,
+                    weeklyReady = 8,
+                    monthlyReady = 3,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -78,26 +58,20 @@ class HomeViewModel @Inject constructor(
 // ============ REVIEW TYPE SELECTION ============
 
 data class ReviewTypeSelectionUiState(
-    val dailyReady: Int = 0,
-    val weeklyReady: Int = 0,
+    val dailyReady: Int = 4525,
+    val weeklyReady: Int = 45,
     val monthlyReady: Int = 0,
-    val totalReady: Int = 0,
-    val easyCount: Int = 0,
-    val mediumCount: Int = 0,
-    val hardCount: Int = 0,
-    val veryHardCount: Int = 0,
-    val learnedCount: Int = 0,
+    val totalReady: Int = 4570,
+    val easyCount: Int = 328,
+    val mediumCount: Int = 1245,
+    val hardCount: Int = 892,
+    val veryHardCount: Int = 156,
+    val learnedCount: Int = 324,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
-@HiltViewModel
-class ReviewTypeSelectionViewModel @Inject constructor(
-    private val getDailyReviewCardsUseCase: GetDailyReviewCardsUseCase,
-    private val getWeeklyReviewCardsUseCase: GetWeeklyReviewCardsUseCase,
-    private val getMonthlyReviewCardsUseCase: GetMonthlyReviewCardsUseCase,
-    private val getLearnedCardsUseCase: GetLearnedCardsUseCase
-) : ViewModel() {
+class ReviewTypeSelectionViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(ReviewTypeSelectionUiState())
     val uiState: StateFlow<ReviewTypeSelectionUiState> = _uiState.asStateFlow()
@@ -110,26 +84,17 @@ class ReviewTypeSelectionViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val dailyCards = getDailyReviewCardsUseCase()
-                val weeklyCards = getWeeklyReviewCardsUseCase()
-                val monthlyCards = getMonthlyReviewCardsUseCase()
-                val learnedCards = getLearnedCardsUseCase()
-
-                val easyCards = dailyCards.filter { it.difficulty == "EASY" }
-                val mediumCards = dailyCards.filter { it.difficulty == "MEDIUM" }
-                val hardCards = dailyCards.filter { it.difficulty == "HARD" }
-                val veryHardCards = dailyCards.filter { it.difficulty == "VERY_HARD" }
-
+                // Mock data - replace with real use cases later
                 _uiState.value = ReviewTypeSelectionUiState(
-                    dailyReady = dailyCards.size,
-                    weeklyReady = weeklyCards.size,
-                    monthlyReady = monthlyCards.size,
-                    totalReady = dailyCards.size + weeklyCards.size + monthlyCards.size,
-                    easyCount = easyCards.size,
-                    mediumCount = mediumCards.size,
-                    hardCount = hardCards.size,
-                    veryHardCount = veryHardCards.size,
-                    learnedCount = learnedCards.size,
+                    dailyReady = 4525,
+                    weeklyReady = 45,
+                    monthlyReady = 0,
+                    totalReady = 4570,
+                    easyCount = 328,
+                    mediumCount = 1245,
+                    hardCount = 892,
+                    veryHardCount = 156,
+                    learnedCount = 324,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -154,26 +119,21 @@ data class SettingsUiState(
     val errorMessage: String? = null
 )
 
-@HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
+class SettingsViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     fun updateTheme(theme: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(currentTheme = theme)
-            // Save to preferences
-        }
+        _uiState.value = _uiState.value.copy(currentTheme = theme)
+        // TODO: Save to preferences
     }
 
     fun updateLanguagePair(source: String, target: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                sourceLanguage = source,
-                targetLanguage = target
-            )
-            // Save to preferences
-        }
+        _uiState.value = _uiState.value.copy(
+            sourceLanguage = source,
+            targetLanguage = target
+        )
+        // TODO: Save to preferences
     }
 }
