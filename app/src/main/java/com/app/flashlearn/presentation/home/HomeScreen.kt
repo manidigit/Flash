@@ -62,7 +62,7 @@ fun HomeScreen(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.lg, vertical = Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        item { HomeHeader(state.sourceLanguage, state.targetLanguage, state.streak) }
+        item { HomeHeader(state.sourceLanguage, state.targetLanguage) }
 
         item {
             GradientHero(
@@ -75,7 +75,7 @@ fun HomeScreen(
 
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                HomeStat(Icons.Default.LocalFireDepartment, "${state.streak}", "روز پیوسته", Color(0xFFF97316), Modifier.weight(1f))
+                HomeStat(Icons.Default.LocalFireDepartment, "روز پیوسته", "پیگیری فعالیت", Color(0xFFF97316), Modifier.weight(1f))
                 HomeStat(Icons.Default.CheckCircle, "${state.difficultySummary.values.sum()}", "واژه در سطوح", Color(0xFF14B8A6), Modifier.weight(1f))
                 HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه‌ها", Color(0xFF3B82F6), Modifier.weight(1f))
             }
@@ -121,14 +121,14 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHeader(source: String, target: String, streak: Int) {
+private fun HomeHeader(source: String, target: String) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("امروز چه چیزی یاد می‌گیریم؟", style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
                 Text("فلش‌لرن را هر روز کمی بهتر کن", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            StreakBadge(streak)
+            StreakBadge()
         }
         Row(Modifier.fillMaxWidth().padding(top = Spacing.sm), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
             Text("$source  →  $target", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -138,11 +138,11 @@ private fun HomeHeader(source: String, target: String, streak: Int) {
 }
 
 @Composable
-private fun StreakBadge(streak: Int) {
+private fun StreakBadge() {
     Card(shape = CircleShape, colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7ED))) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Icon(Icons.Default.LocalFireDepartment, null, tint = Color(0xFFF97316), modifier = Modifier.size(20.dp))
-            Text("$streak", fontWeight = FontWeight.Bold, color = Color(0xFFEA580C))
+            Text("روز پیوسته", fontWeight = FontWeight.Bold, color = Color(0xFFEA580C), style = MaterialTheme.typography.labelMedium)
         }
     }
 }
