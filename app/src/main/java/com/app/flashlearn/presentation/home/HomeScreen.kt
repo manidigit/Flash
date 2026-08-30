@@ -67,7 +67,7 @@ fun HomeScreen(
         item {
             GradientHero(
                 title = if (dueTotal > 0) "$dueTotal کلمه منتظر توست" else "امروز چیزی برای مرور نداری",
-                subtitle = if (dueTotal > 0) "$dueTotal کلمه از ${state.totalWords} کلمه آماده مرور است" else "خیلی خوب پیش رفتی؛ می‌توانی واژه جدید اضافه کنی."
+                subtitle = ""
             ) {
                 ProgressBar(progress, Modifier.fillMaxWidth())
             }
@@ -75,9 +75,9 @@ fun HomeScreen(
 
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                HomeStat(Icons.Default.LocalFireDepartment, "روز پیوسته", "پیگیری فعالیت", Color(0xFFF97316), Modifier.weight(1f))
-                HomeStat(Icons.Default.CheckCircle, "${state.difficultySummary.values.sum()}", "واژه در سطوح", Color(0xFF14B8A6), Modifier.weight(1f))
-                HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه‌ها", Color(0xFF3B82F6), Modifier.weight(1f))
+                HomeStat(Icons.Default.CheckCircle, "${state.difficultySummary.values.sum()}", "تمرین شده", Color(0xFF14B8A6), Modifier.weight(1f))
+                HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه", Color(0xFF3B82F6), Modifier.weight(1f))
+                HomeStat(Icons.Default.LocalFireDepartment, "12", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
             }
         }
 
@@ -123,26 +123,19 @@ fun HomeScreen(
 @Composable
 private fun HomeHeader(source: String, target: String) {
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("امروز چه چیزی یاد می‌گیریم؟", style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
-                Text("فلش‌لرن را هر روز کمی بهتر کن", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            StreakBadge()
-        }
-        Row(Modifier.fillMaxWidth().padding(top = Spacing.sm), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-            Text("$source  →  $target", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("  ${languageFlags(source, target)}", style = MaterialTheme.typography.titleMedium)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            StreakBadge(30, source, target)
         }
     }
 }
 
 @Composable
-private fun StreakBadge() {
+private fun StreakBadge(streakDays: Int, source: String, target: String) {
     Card(shape = CircleShape, colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7ED))) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             Icon(Icons.Default.LocalFireDepartment, null, tint = Color(0xFFF97316), modifier = Modifier.size(20.dp))
-            Text("روز پیوسته", fontWeight = FontWeight.Bold, color = Color(0xFFEA580C), style = MaterialTheme.typography.labelMedium)
+            Text("$streakDays روز پیوسته", fontWeight = FontWeight.Bold, color = Color(0xFFEA580C), style = MaterialTheme.typography.labelMedium)
+            Text(languageFlags(source, target), style = MaterialTheme.typography.titleSmall)
         }
     }
 }
