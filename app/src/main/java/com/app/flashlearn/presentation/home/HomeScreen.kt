@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +19,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,6 +51,8 @@ fun HomeScreen(
     onStartReview: (LearningStage) -> Unit,
     onOpenStatistics: () -> Unit,
     onAddWord: () -> Unit,
+    onOpenVocabulary: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -59,17 +62,51 @@ fun HomeScreen(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.lg, vertical = Spacing.lg),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            horizontal = Spacing.lg,
+            vertical = Spacing.lg,
+            bottom = 80.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         item { HomeHeader(state.sourceLanguage, state.targetLanguage) }
 
         item {
-            GradientHero(
-                title = if (dueTotal > 0) "$dueTotal کلمه منتظر توست" else "امروز چیزی برای مرور نداری",
-                subtitle = ""
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(Radius.card),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                ProgressBar(progress, Modifier.fillMaxWidth())
+                Column(Modifier.fillMaxWidth().padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column {
+                            Text("${state.streakDays}", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("روز پیوسته", style = MaterialTheme.typography.bodySmall, color = Color.White)
+                            Text("تعداد روزهایی که از برنامه پشت سر هم بدون وقفه استفاده کردم", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(top = Spacing.xs))
+                        }
+                        Text(languageFlags(state.sourceLanguage, state.targetLanguage), style = MaterialTheme.typography.headlineMedium)
+                    }
+                    Text("زبان هایی که داربم استفاده میکنیم برای آموزش زبان", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                }
+            }
+        }
+
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(Radius.card)) {
+                    Row(Modifier.fillMaxWidth().padding(Spacing.md), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                        Icon(Icons.Default.MenuBook, null, modifier = Modifier.size(32.dp))
+                        Column {
+                            Text("$dueTotal", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text("کلمه منتظر شناخت", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                Card(modifier = Modifier.width(56.dp), shape = RoundedCornerShape(Radius.card), colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))) {
+                    Box(Modifier.fillMaxWidth().padding(Spacing.md), contentAlignment = Alignment.Center) {
+                        Text("➕", style = MaterialTheme.typography.headlineSmall)
+                    }
+                }
             }
         }
 
@@ -77,15 +114,36 @@ fun HomeScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 HomeStat(Icons.Default.CheckCircle, "${state.difficultySummary.values.sum()}", "تمرین شده", Color(0xFF14B8A6), Modifier.weight(1f))
                 HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه", Color(0xFF3B82F6), Modifier.weight(1f))
-                HomeStat(Icons.Default.LocalFireDepartment, "12", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
+                HomeStat(Icons.Default.LocalFireDepartment, "${state.learnedCount}", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
+            }
+        }
+
+        item {
+            Column(Modifier.fillMaxWidth()) {
+                Text("ادامه پده", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = Spacing.sm))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    Icon(Icons.Default.CalendarMonth, null, tint = Color(0xFFF59E0B), modifier = Modifier.size(28.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("روزانه", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("${state.dueDaily} از ${state.totalWords}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    val dailyProgress = if (state.totalWords == 0) 0f else state.dueDaily.toFloat() / state.totalWords
+                    ProgressBar(dailyProgress, Modifier.width(60.dp))
+                }
             }
         }
 
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                QuickAction(Icons.Default.AddCircle, "افزودن واژه", Modifier.weight(1f), onAddWord)
-                QuickAction(Icons.Default.Refresh, "مرور تصادفی", Modifier.weight(1f)) { onStartReview(LearningStage.DAILY) }
-                QuickAction(Icons.Default.BarChart, "آمار", Modifier.weight(1f), onOpenStatistics)
+                ActionButton("مرور کلمات", Icons.Default.MenuBook, Modifier.weight(1f)) { onStartReview(LearningStage.DAILY) }
+                ActionButton("آمار و گزارش", Icons.Default.BarChart, Modifier.weight(1f), onOpenStatistics)
+            }
+        }
+
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                ActionButton("واژگان", Icons.Default.MenuBook, Modifier.weight(1f), onOpenVocabulary)
+                ActionButton("تنظیمات", Icons.Default.Settings, Modifier.weight(1f), onOpenSettings)
             }
         }
 
@@ -123,19 +181,10 @@ fun HomeScreen(
 @Composable
 private fun HomeHeader(source: String, target: String) {
     Column(Modifier.fillMaxWidth()) {
+        Text("سلام مانی!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            StreakBadge(30, source, target)
-        }
-    }
-}
-
-@Composable
-private fun StreakBadge(streakDays: Int, source: String, target: String) {
-    Card(shape = CircleShape, colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7ED))) {
-        Row(Modifier.padding(horizontal = 10.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            Icon(Icons.Default.LocalFireDepartment, null, tint = Color(0xFFF97316), modifier = Modifier.size(20.dp))
-            Text("$streakDays روز پیوسته", fontWeight = FontWeight.Bold, color = Color(0xFFEA580C), style = MaterialTheme.typography.labelMedium)
-            Text(languageFlags(source, target), style = MaterialTheme.typography.titleSmall)
+            Text("به فلسطرین خوش آمدی", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(languageFlags(source, target), style = MaterialTheme.typography.headlineMedium)
         }
     }
 }
@@ -147,6 +196,16 @@ private fun HomeStat(icon: androidx.compose.ui.graphics.vector.ImageVector, valu
             Icon(icon, null, tint = tint, modifier = Modifier.size(23.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+private fun ActionButton(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier, onClick: () -> Unit = {}) {
+    Card(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(Radius.card)) {
+        Column(Modifier.fillMaxWidth().padding(Spacing.md), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+            Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
         }
     }
 }
