@@ -2,27 +2,41 @@ package com.app.flashlearn.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Light Theme Colors
-val LightPrimary = Color(0xFF3B82F6)          // Blue
-val LightSecondary = Color(0xFF14B8A6)        // Teal
-val LightTertiary = Color(0xFF7C3AED)         // Purple
-val LightBackground = Color(0xFFFAFAFA)       // Off-white
-val LightSurface = Color(0xFFFFFFFF)          // White
-val LightError = Color(0xFFEF4444)            // Red
-val LightSuccess = Color(0xFF22C55E)          // Green
-val LightWarning = Color(0xFFF59E0B)          // Amber
+// ============ LIGHT THEME COLORS ============
+val PrimaryLight = Color(0xFF3B82F6)          // Blue
+val SecondaryLight = Color(0xFF14B8A6)        // Teal
+val PinkLight = Color(0xFFEC4899)             // Pink
+val BackgroundLight = Color(0xFFFAFAFA)       // Off-white
+val SurfaceLight = Color(0xFFFFFFFF)          // White
+val SurfaceAltLight = Color(0xFFF3F4F6)       // Light gray
+val ErrorLight = Color(0xFFEF4444)            // Red
+val TextPrimaryLight = Color(0xFF1F2937)      // Dark gray
+val TextSecondaryLight = Color(0xFF6B7280)    // Medium gray
 
-// Dark Theme Colors
-val DarkPrimary = Color(0xFF818CF8)           // Light Blue
-val DarkSecondary = Color(0xFF2DD4BF)         // Light Teal
-val DarkTertiary = Color(0xFFA78BFA)          // Light Purple
-val DarkBackground = Color(0xFF121212)        // Dark background
-val DarkSurface = Color(0xFF1E1E1E)           // Dark surface
-val DarkError = Color(0xFFF87171)             // Light Red
-val DarkSuccess = Color(0xFF4ADE80)           // Light Green
-val DarkWarning = Color(0xFFFBBF24)           // Light Amber
+// Status Colors - Light
+val SuccessLight = Color(0xFF22C55E)          // Green
+val WarningLight = Color(0xFFF59E0B)          // Amber
+val DueLight = Color(0xFF3B82F6)              // Blue
+val LearnedLight = Color(0xFF8B5CF6)          // Purple
 
-// Semantic Colors (Status-based)
+// ============ DARK THEME COLORS ============
+val PrimaryDark = Color(0xFF818CF8)           // Light Blue
+val SecondaryDark = Color(0xFF2DD4BF)         // Light Teal
+val PinkDark = Color(0xFFF472B6)              // Light Pink
+val BackgroundDark = Color(0xFF121212)        // Dark background
+val SurfaceDark = Color(0xFF1E1E1E)           // Dark surface
+val SurfaceAltDark = Color(0xFF2D2D2D)        // Dark gray
+val ErrorDark = Color(0xFFF87171)             // Light Red
+val TextPrimaryDark = Color(0xFFF3F4F6)       // Light gray
+val TextSecondaryDark = Color(0xFFD1D5DB)     // Medium light gray
+
+// Status Colors - Dark
+val SuccessDark = Color(0xFF4ADE80)           // Light Green
+val WarningDark = Color(0xFFFBBF24)           // Light Amber
+val DueDark = Color(0xFF60A5FA)               // Light Blue
+val LearnedDark = Color(0xFFA78BFA)           // Light Purple
+
+// ============ SEMANTIC/UI COLORS (Stage 21) ============
 val ColorDaily = Color(0xFFFCD34D)            // Yellow ☀️
 val ColorWeekly = Color(0xFF60A5FA)           // Blue 📅
 val ColorMonthly = Color(0xFFA78BFA)          // Purple 🌙
