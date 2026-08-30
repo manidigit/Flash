@@ -1,19 +1,23 @@
 package com.app.flashlearn.presentation.statistics
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +25,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -29,9 +37,7 @@ import com.app.flashlearn.domain.model.LearningStage
 import com.app.flashlearn.ui.theme.DifficultyBadge
 import com.app.flashlearn.ui.theme.ProgressBar
 import com.app.flashlearn.ui.theme.Radius
-import com.app.flashlearn.ui.theme.SectionHeader
 import com.app.flashlearn.ui.theme.Spacing
-import com.app.flashlearn.ui.theme.StatPill
 
 @Composable
 fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
@@ -39,85 +45,99 @@ fun StatisticsScreen(viewModel: StatisticsViewModel = hiltViewModel()) {
     val learned = state.stageSummary[LearningStage.LEARNED] ?: 0
     val accuracy = state.allTime.percentage
 
-    LazyColumn(
+    androidx.compose.foundation.lazy.LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(Spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(Spacing.lg)
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Spacing.lg, vertical = Spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
         item {
-            Text("پیشرفت تو", style = MaterialTheme.typography.headlineLarge)
-            Text("آمار واقعی مرورها و میزان تسلط روی واژه‌ها", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("آمار و گزارش", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+            Text("تصویر واقعی‌تری از پیشرفت و نقاط قوتت.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                StatPill(Icons.Default.School, "${state.totalWords}", "کل واژه‌ها", Modifier.weight(1f))
-                StatPill(Icons.Default.CheckCircle, "$learned", "یادگرفته", Modifier.weight(1f))
-                StatPill(Icons.Default.LocalFireDepartment, "$accuracy%", "دقت کل", Modifier.weight(1f))
+                ColorStatCard(Icons.Default.MenuBook, "${state.totalWords}", "کل واژه‌ها", Color(0xFF3B82F6), Modifier.weight(1f))
+                ColorStatCard(Icons.Default.School, "$learned", "یادگرفته", Color(0xFF10B981), Modifier.weight(1f))
+                ColorStatCard(Icons.Default.CheckCircle, "$accuracy٪", "دقت کل", Color(0xFFF59E0B), Modifier.weight(1f))
             }
         }
         item {
-            Card(shape = RoundedCornerShape(Radius.card), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    Text("حفظ ماندگار", style = MaterialTheme.typography.titleLarge)
-                    Text("$accuracy٪", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary)
-                    ProgressBar(accuracy / 100f)
-                    Text("${state.allTime.correct} پاسخ درست از ${state.allTime.total}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Card(shape = RoundedCornerShape(Radius.card), colors = CardDefaults.cardColors(containerColor = Color(0xFFEEF2FF))) {
+                Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        Icon(Icons.Default.TrendingUp, null, tint = Color(0xFF6366F1))
+                        Text("حفظ ماندگار", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    }
+                    Text("$accuracy٪", style = MaterialTheme.typography.displaySmall, color = Color(0xFF4F46E5), fontWeight = FontWeight.Bold)
+                    ProgressBar(accuracy / 100f, Modifier.fillMaxWidth())
+                    Text("${state.allTime.correct} پاسخ درست از ${state.allTime.total}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
-        item { SectionHeader("مراحل یادگیری") }
-        item {
-            Card(shape = RoundedCornerShape(Radius.card)) {
-                Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    StageLine("روزانه", state.stageSummary[LearningStage.DAILY] ?: 0, state.totalWords)
-                    StageLine("هفتگی", state.stageSummary[LearningStage.WEEKLY] ?: 0, state.totalWords)
-                    StageLine("ماهانه", state.stageSummary[LearningStage.MONTHLY] ?: 0, state.totalWords)
-                    StageLine("یادگرفته‌شده", learned, state.totalWords)
-                }
-            }
-        }
-        item { SectionHeader("پروفایل سختی") }
+        item { Text("مراحل یادگیری", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = Spacing.xs)) }
         item {
             Card(shape = RoundedCornerShape(Radius.card)) {
                 Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                    DifficultyLine("آسان", Difficulty.EASY, state)
-                    DifficultyLine("متوسط", Difficulty.MEDIUM, state)
-                    DifficultyLine("سخت", Difficulty.HARD, state)
-                    DifficultyLine("خیلی سخت", Difficulty.VERY_HARD, state)
+                    StageLine("روزانه", state.stageSummary[LearningStage.DAILY] ?: 0, state.totalWords, Color(0xFF10B981))
+                    StageLine("هفتگی", state.stageSummary[LearningStage.WEEKLY] ?: 0, state.totalWords, Color(0xFF3B82F6))
+                    StageLine("ماهانه", state.stageSummary[LearningStage.MONTHLY] ?: 0, state.totalWords, Color(0xFF8B5CF6))
+                    StageLine("یادگرفته", learned, state.totalWords, Color(0xFFF59E0B))
                 }
             }
         }
-        item { SectionHeader("دقت مرور") }
-        item { AccuracyCard("امروز", state.today) }
-        item { AccuracyCard("این هفته", state.thisWeek) }
-        item { AccuracyCard("این ماه", state.thisMonth) }
-        item { AccuracyCard("مجموع کل", state.allTime) }
+        item { Text("پروفایل سختی", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = Spacing.xs)) }
+        item {
+            Card(shape = RoundedCornerShape(Radius.card)) {
+                Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    DifficultyLine("آسان", Difficulty.EASY, state, Color(0xFF10B981), 0)
+                    DifficultyLine("متوسط", Difficulty.MEDIUM, state, Color(0xFFF59E0B), 1)
+                    DifficultyLine("سخت", Difficulty.HARD, state, Color(0xFFF97316), 2)
+                    DifficultyLine("خیلی سخت", Difficulty.VERY_HARD, state, Color(0xFFEF4444), 3)
+                }
+            }
+        }
+        item { Text("دقت مرور", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = Spacing.xs)) }
+        item { AccuracyCard("امروز", state.today, Color(0xFF14B8A6)) }
+        item { AccuracyCard("این هفته", state.thisWeek, Color(0xFF3B82F6)) }
+        item { AccuracyCard("این ماه", state.thisMonth, Color(0xFF8B5CF6)) }
+        item { AccuracyCard("مجموع کل", state.allTime, Color(0xFFF59E0B)) }
     }
 }
 
-@Composable private fun StageLine(label: String, count: Int, total: Int) {
+@Composable private fun ColorStatCard(icon: androidx.compose.ui.graphics.vector.ImageVector, value: String, label: String, tint: Color, modifier: Modifier) {
+    Card(modifier = modifier, shape = RoundedCornerShape(Radius.smallCard), colors = CardDefaults.cardColors(containerColor = tint.copy(alpha = .09f))) {
+        Column(Modifier.fillMaxWidth().padding(vertical = Spacing.md, horizontal = Spacing.xs), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Icon(icon, null, tint = tint)
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable private fun StageLine(label: String, count: Int, total: Int, tint: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, modifier = Modifier.weight(.3f), style = MaterialTheme.typography.bodyMedium)
-        ProgressBar(if (total == 0) 0f else count.toFloat() / total, Modifier.weight(.55f).padding(horizontal = Spacing.md), 8)
-        Text("$count", modifier = Modifier.weight(.15f), fontWeight = FontWeight.Bold)
+        Text(label, modifier = Modifier.weight(.28f), style = MaterialTheme.typography.bodyMedium)
+        ProgressBar(count.toFloat().div(total.coerceAtLeast(1)), Modifier.weight(.57f).padding(horizontal = Spacing.md), 8)
+        Text("$count", modifier = Modifier.weight(.15f), fontWeight = FontWeight.Bold, color = tint)
     }
 }
 
-@Composable private fun DifficultyLine(label: String, difficulty: Difficulty, state: StatisticsUiState) {
+@Composable private fun DifficultyLine(label: String, difficulty: Difficulty, state: StatisticsUiState, tint: Color, level: Int) {
     val count = state.difficultySummary[difficulty] ?: 0
     Row(verticalAlignment = Alignment.CenterVertically) {
-        DifficultyBadge(label, difficulty.ordinal)
-        ProgressBar(if (state.totalWords == 0) 0f else count.toFloat() / state.totalWords, Modifier.weight(1f).padding(horizontal = Spacing.md), 7)
-        Text("$count", fontWeight = FontWeight.Bold)
+        DifficultyBadge(label, level)
+        ProgressBar(count.toFloat().div(state.totalWords.coerceAtLeast(1)), Modifier.weight(1f).padding(horizontal = Spacing.md), 7)
+        Text("$count", fontWeight = FontWeight.Bold, color = tint)
     }
 }
 
-@Composable private fun AccuracyCard(label: String, stat: AccuracyStat) {
-    Card(shape = RoundedCornerShape(Radius.smallCard)) {
-        Row(Modifier.fillMaxWidth().padding(Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            Text("${stat.percentage}%", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Text("  ${stat.correct}/${stat.total}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+@Composable private fun AccuracyCard(label: String, stat: AccuracyStat, tint: Color) {
+    Card(shape = RoundedCornerShape(Radius.smallCard), colors = CardDefaults.cardColors(containerColor = tint.copy(alpha = .06f))) {
+        Row(Modifier.fillMaxWidth().padding(Spacing.md), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.CheckCircle, null, tint = tint)
+            Text(label, modifier = Modifier.weight(1f).padding(horizontal = Spacing.sm), style = MaterialTheme.typography.titleMedium)
+            Text("${stat.percentage}%", style = MaterialTheme.typography.titleLarge, color = tint, fontWeight = FontWeight.Bold)
+            Text("  ${stat.correct}/${stat.total}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
