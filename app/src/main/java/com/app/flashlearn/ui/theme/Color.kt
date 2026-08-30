@@ -2,35 +2,54 @@ package com.app.flashlearn.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// FlashLearn Aurora palette — original visual identity.
-val PrimaryLight = Color(0xFF5B4FE9)
-val PrimaryDark = Color(0xFF9A8FFF)
-val SecondaryLight = Color(0xFF0FAE9D)
-val SecondaryDark = Color(0xFF35D8C5)
-val AccentLight = Color(0xFFFFB547)
-val AccentDark = Color(0xFFFFC86B)
-val PinkLight = Color(0xFFE56BA8)
-val PinkDark = Color(0xFFFF8BC4)
+// Light Theme Colors
+val LightPrimary = Color(0xFF3B82F6)          // Blue
+val LightSecondary = Color(0xFF14B8A6)        // Teal
+val LightTertiary = Color(0xFF7C3AED)         // Purple
+val LightBackground = Color(0xFFFAFAFA)       // Off-white
+val LightSurface = Color(0xFFFFFFFF)          // White
+val LightError = Color(0xFFEF4444)            // Red
+val LightSuccess = Color(0xFF22C55E)          // Green
+val LightWarning = Color(0xFFF59E0B)          // Amber
 
-val BackgroundLight = Color(0xFFF7F7FC)
-val BackgroundDark = Color(0xFF0E0F18)
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceDark = Color(0xFF171824)
-val SurfaceAltLight = Color(0xFFF0F0F8)
-val SurfaceAltDark = Color(0xFF202132)
+// Dark Theme Colors
+val DarkPrimary = Color(0xFF818CF8)           // Light Blue
+val DarkSecondary = Color(0xFF2DD4BF)         // Light Teal
+val DarkTertiary = Color(0xFFA78BFA)          // Light Purple
+val DarkBackground = Color(0xFF121212)        // Dark background
+val DarkSurface = Color(0xFF1E1E1E)           // Dark surface
+val DarkError = Color(0xFFF87171)             // Light Red
+val DarkSuccess = Color(0xFF4ADE80)           // Light Green
+val DarkWarning = Color(0xFFFBBF24)           // Light Amber
 
-val SuccessLight = Color(0xFF16A67A)
-val SuccessDark = Color(0xFF45D5A7)
-val ErrorLight = Color(0xFFD94B62)
-val ErrorDark = Color(0xFFFF7187)
-val WarningLight = Color(0xFFE79621)
-val WarningDark = Color(0xFFFFC15C)
-val DueLight = Color(0xFF477BEA)
-val DueDark = Color(0xFF7EA3FF)
-val LearnedLight = Color(0xFF8159D9)
-val LearnedDark = Color(0xFFB18BFF)
+// Semantic Colors (Status-based)
+val ColorDaily = Color(0xFFFCD34D)            // Yellow ☀️
+val ColorWeekly = Color(0xFF60A5FA)           // Blue 📅
+val ColorMonthly = Color(0xFFA78BFA)          // Purple 🌙
+val ColorRandom = Color(0xFF0EA5E9)           // Cyan 🎲
+val ColorLearned = Color(0xFF8B5CF6)          // Purple 🎓
 
-val TextPrimaryLight = Color(0xFF1B1C29)
-val TextPrimaryDark = Color(0xFFF5F4FB)
-val TextSecondaryLight = Color(0xFF6E7082)
-val TextSecondaryDark = Color(0xFFA8A9BA)
+// Difficulty Colors
+val ColorEasy = Color(0xFF10B981)             // Green
+val ColorMedium = Color(0xFF3B82F6)           // Blue
+val ColorHard = Color(0xFFF59E0B)             // Orange
+val ColorVeryHard = Color(0xFFEF4444)         // Red
+
+// Additional UI Colors
+val ColorTeal = Color(0xFF14B8A6)
+val ColorPurple = Color(0xFF7C3AED)
+val ColorGreen = Color(0xFF22C55E)
+val ColorOrange = Color(0xFFF59E0B)
+val ColorRed = Color(0xFFEF4444)
+val ColorBlue = Color(0xFF3B82F6)
+val ColorYellow = Color(0xFFFCD34D)
+val ColorCyan = Color(0xFF06B6D4)
+
+// Extended Colors for Backgrounds
+val LightGreen = Color(0xFFD1FAE5)
+val LightBlue = Color(0xFFDBEAFE)
+val LightYellow = Color(0xFFFEF3C7)
+val LightOrange = Color(0xFFFED7AA)
+val LightRed = Color(0xFFFECACA)
+val LightPurple = Color(0xFFEDE9FE)
+val LightCyan = Color(0xFFCFFAFE)
