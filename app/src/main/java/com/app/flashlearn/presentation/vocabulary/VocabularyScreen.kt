@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.flashlearn.domain.model.Concept
@@ -94,12 +95,10 @@ fun VocabularyScreen(
 }
 
 @Composable
-private fun FilterButton(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun RowScope.FilterButton(label: String, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth(),
+        modifier = Modifier.weight(1f),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
@@ -110,7 +109,8 @@ private fun FilterButton(label: String, selected: Boolean, onClick: () -> Unit) 
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             style = MaterialTheme.typography.labelSmall,
             color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
 }
