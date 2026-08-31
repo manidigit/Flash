@@ -53,8 +53,9 @@ fun VocabularyScreen(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            horizontal = Spacing.lg,
-            vertical = Spacing.lg,
+            start = Spacing.lg,
+            end = Spacing.lg,
+            top = Spacing.lg,
             bottom = 80.dp
         ),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
@@ -96,7 +97,9 @@ fun VocabularyScreen(
 private fun FilterButton(label: String, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.weight(1f),
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
@@ -130,7 +133,7 @@ private fun WordCard(concept: Concept, onEdit: (Long) -> Unit) {
 
             Column(Modifier.weight(1f)) {
                 Text(
-                    concept.text ?: "N/A",
+                    "كلمه",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
