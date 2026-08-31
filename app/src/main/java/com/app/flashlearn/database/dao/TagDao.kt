@@ -1,46 +1,30 @@
 package com.app.flashlearn.database.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.app.flashlearn.database.entity.ConceptTagEntity
+import androidx.room.Update
 import com.app.flashlearn.database.entity.TagEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TagDao {
+    @Insert
+    suspend fun insert(tag: TagEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertTag(tag: TagEntity): Long
+    @Update
+    suspend fun update(tag: TagEntity)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertConceptTag(conceptTag: ConceptTagEntity)
+    @Delete
+    suspend fun delete(tag: TagEntity)
 
-    @Query("DELETE FROM concept_tags WHERE conceptId = :conceptId AND tagId = :tagId")
-    suspend fun removeConceptTag(conceptId: Long, tagId: Long)
+    @Query("SELECT * FROM tag WHERE id = :id")
+    suspend fun getById(id: Long): TagEntity?
 
-    @Query("SELECT * FROM tags ORDER BY name")
-    fun observeAll(): Flow<List<TagEntity>>
+    @Query("SELECT * FROM tag ORDER BY name ASC")
+    fun getAll(): Flow<List<TagEntity>>
 
-    @Query("SELECT * FROM tags WHERE name = :name LIMIT 1")
-    suspend fun findByName(name: String): TagEntity?
-
-    @Query(
-        """
-        SELECT tags.* FROM tags
-        INNER JOIN concept_tags ON tags.id = concept_tags.tagId
-        WHERE concept_tags.conceptId = :conceptId
-        """
-    )
-    fun observeTagsForConcept(conceptId: Long): Flow<List<TagEntity>>
-
-    @Query(
-        """
-        SELECT tags.* FROM tags
-        INNER JOIN concept_tags ON tags.id = concept_tags.tagId
-        WHERE concept_tags.conceptId = :conceptId
-        """
-    )
-    suspend fun getTagsForConcept(conceptId: Long): List<TagEntity>
+    @Query("SELECT * FROM tag WHERE name = :name LIMIT 1")
+    suspend fun getByName(name: String): TagEntity?
 }

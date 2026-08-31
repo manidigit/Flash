@@ -2,23 +2,31 @@ package com.app.flashlearn.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.app.flashlearn.database.entity.AppSettingsEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AppSettingsDao {
+    @Insert
+    suspend fun insert(settings: AppSettingsEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun set(setting: AppSettingsEntity)
+    @Update
+    suspend fun update(settings: AppSettingsEntity)
 
-    @Query("SELECT * FROM app_settings WHERE `key` = :key")
-    suspend fun get(key: String): AppSettingsEntity?
+    @Query("SELECT * FROM app_settings WHERE id = 0")
+    fun getSettings(): Flow<AppSettingsEntity?>
 
-    @Query("SELECT * FROM app_settings WHERE `key` = :key")
-    fun observe(key: String): Flow<AppSettingsEntity?>
+    @Query("SELECT * FROM app_settings WHERE id = 0")
+    suspend fun getSettingsSync(): AppSettingsEntity?
 
-    @Query("SELECT * FROM app_settings")
-    suspend fun getAll(): List<AppSettingsEntity>
+    @Query("UPDATE app_settings SET streakDays = :days WHERE id = 0")
+    suspend fun updateStreakDays(days: Int)
+
+    @Query("UPDATE app_settings SET lastReviewDate = :date WHERE id = 0")
+    suspend fun updateLastReviewDate(date: Long)
+
+    @Query("UPDATE app_settings SET sourceLanguage = :source, targetLanguage = :target WHERE id = 0")
+    suspend fun updateLanguagePair(source: String, target: String)
 }

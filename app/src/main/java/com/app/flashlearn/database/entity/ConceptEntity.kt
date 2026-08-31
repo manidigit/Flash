@@ -5,38 +5,31 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/**
- * موجودیت مرکزی دیتابیس. هر Concept یک واحد یادگیری است (کلمه/عبارت/جمله/...)
- * که می‌تواند چند ترجمه (ContentEntity) در زبان‌های مختلف داشته باشد.
- * uuid برای Import/Export بین دستگاه‌ها و جلوگیری از Collision استفاده می‌شود.
- */
 @Entity(
-    tableName = "concepts",
+    tableName = "concept",
     foreignKeys = [
         ForeignKey(
             entity = CategoryEntity::class,
             parentColumns = ["id"],
             childColumns = ["categoryId"],
-            onDelete = ForeignKey.SET_NULL
+            onDelete = ForeignKey.SET_NULL,
+            onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["uuid"], unique = true),
-        Index(value = ["categoryId"]),
-        Index(value = ["active"]),
-        Index(value = ["contentType"])
+        Index("uuid", unique = true),
+        Index("categoryId"),
+        Index("active")
     ]
 )
 data class ConceptEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val uuid: String,
-    // WORD, PHRASE, SENTENCE, IDIOM, VERB, EXPRESSION, DIALOGUE
-    val contentType: String,
-    val categoryId: Long? = null,
+    val contentType: String, // WORD / PHRASE / SENTENCE / IDIOM / VERB / EXPRESSION / DIALOGUE
+    val categoryId: Long?,
     val favorite: Boolean = false,
     val active: Boolean = true,
-    val createdAt: Long,
-    val updatedAt: Long,
-    val notes: String? = null
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
 )

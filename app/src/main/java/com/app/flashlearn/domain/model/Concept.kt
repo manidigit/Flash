@@ -3,23 +3,13 @@ package com.app.flashlearn.domain.model
 data class Concept(
     val id: Long,
     val uuid: String,
-    val contentType: ContentType,
+    val contentType: String,
     val categoryId: Long?,
     val favorite: Boolean,
     val active: Boolean,
     val createdAt: Long,
     val updatedAt: Long,
-    val notes: String?,
-    val contents: List<ContentItem>,
-    val tags: List<String>
-) {
-    fun contentFor(languageCode: String): ContentItem? =
-        contents.firstOrNull { it.languageCode == languageCode }
-
-    /**
-     * همه معنی‌ها/ترجمه‌های این Concept در یک زبان (بند 64: یک کلمه می‌تواند چند معنی
-     * داشته باشد؛ مثلاً «banco» هم «نیمکت» هم «بانک»). برای نمایش کامل در فلش‌کارت.
-     */
-    fun contentsFor(languageCode: String): List<ContentItem> =
-        contents.filter { it.languageCode == languageCode }
-}
+    val contents: List<Content> = emptyList(),
+    val tags: List<String> = emptyList(),
+    val learningState: LearningState? = null
+)

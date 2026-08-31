@@ -5,33 +5,35 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/**
- * تاریخچه کامل هر مرور. هرگز حذف نمی‌شود (حتی اگر Concept مرتبط بعدا حذف شود
- * conceptId را NO_ACTION نگه می‌داریم تا تاریخچه دست‌نخورده بماند؛ حذف واقعی Concept
- * در سطح Repository به‌صورت Soft-delete/Archive انجام می‌شود، نه حذف فیزیکی).
- */
 @Entity(
     tableName = "review_history",
     foreignKeys = [
         ForeignKey(
+            entity = ConceptEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["conceptId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        ),
+        ForeignKey(
             entity = ReviewSessionEntity::class,
             parentColumns = ["id"],
             childColumns = ["sessionId"],
-            onDelete = ForeignKey.SET_NULL
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["conceptId"]),
-        Index(value = ["sessionId"]),
-        Index(value = ["reviewDate"])
+        Index("conceptId"),
+        Index("sessionId"),
+        Index("reviewDate")
     ]
 )
 data class ReviewHistoryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val conceptId: Long,
-    val sessionId: String? = null,
-    // DAILY, WEEKLY, MONTHLY
+    val sessionId: String,
     val reviewStage: String,
     val reviewDate: Long,
     val isCorrect: Boolean,
@@ -39,5 +41,5 @@ data class ReviewHistoryEntity(
     val newStatus: String,
     val previousDifficulty: String,
     val newDifficulty: String,
-    val responseTimeMs: Long? = null
+    val responseTimeMs: Long
 )

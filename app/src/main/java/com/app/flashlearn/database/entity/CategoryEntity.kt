@@ -3,7 +3,7 @@ package com.app.flashlearn.database.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "categories")
+@Entity(tableName = "category")
 data class CategoryEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

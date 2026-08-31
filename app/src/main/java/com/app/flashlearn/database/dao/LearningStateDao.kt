@@ -1,152 +1,39 @@
 package com.app.flashlearn.database.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.app.flashlearn.database.entity.LearningStateEntity
+import kotlinx.coroutines.flow.Flow
 
-/**
- * تمام Query های این DAO مستقیماً منطق بند 20/22/31 نیازمندی‌ها را پیاده‌سازی می‌کنند:
- * یک کارت فقط زمانی "آماده مرور" است که nextReviewAt <= now باشد.
- */
 @Dao
 interface LearningStateDao {
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
     suspend fun insert(state: LearningStateEntity)
 
     @Update
     suspend fun update(state: LearningStateEntity)
 
-    @Query("SELECT * FROM learning_states WHERE conceptId = :conceptId")
-    suspend fun getForConcept(conceptId: Long): LearningStateEntity?
+    @Delete
+    suspend fun delete(state: LearningStateEntity)
 
-    @Query(
-        """
-        SELECT * FROM learning_states
-        WHERE stage = :stage AND (nextReviewAt IS NULL OR nextReviewAt <= :now)
-        ORDER BY nextReviewAt ASC
-        LIMIT :limit
-        """
-    )
-    suspend fun getDueForStage(stage: String, now: Long, limit: Int): List<LearningStateEntity>
+    @Query("SELECT * FROM learning_state WHERE conceptId = :conceptId")
+    suspend fun getByConceptId(conceptId: Long): LearningStateEntity?
 
-    @Query(
-        """
-        SELECT learning_states.* FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.stage = :stage
-          AND (learning_states.nextReviewAt IS NULL OR learning_states.nextReviewAt <= :now)
-          AND concepts.categoryId = :categoryId
-        ORDER BY learning_states.nextReviewAt ASC
-        LIMIT :limit
-        """
-    )
-    suspend fun getDueForStageInCategory(stage: String, now: Long, categoryId: Long, limit: Int): List<LearningStateEntity>
+    @Query("SELECT * FROM learning_state WHERE stage = :stage AND nextReviewAt <= :now ORDER BY nextReviewAt ASC")
+    fun getReadyForReview(stage: String, now: Long): Flow<List<LearningStateEntity>>
 
-    @Query(
-        "SELECT COUNT(*) FROM learning_states WHERE stage = :stage AND (nextReviewAt IS NULL OR nextReviewAt <= :now)"
-    )
-    suspend fun countDueForStage(stage: String, now: Long): Int
+    @Query("SELECT * FROM learning_state WHERE stage = :stage")
+    fun getByStage(stage: String): Flow<List<LearningStateEntity>>
 
-    @Query("SELECT * FROM learning_states WHERE difficulty = :difficulty LIMIT :limit OFFSET :offset")
-    suspend fun getByDifficulty(difficulty: String, limit: Int, offset: Int): List<LearningStateEntity>
+    @Query("SELECT COUNT(*) FROM learning_state WHERE stage = :stage")
+    fun getCountByStage(stage: String): Flow<Int>
 
-    @Query(
-        """
-        SELECT learning_states.* FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.difficulty = :difficulty AND concepts.categoryId = :categoryId
-        LIMIT :limit OFFSET :offset
-        """
-    )
-    suspend fun getByDifficultyInCategory(difficulty: String, categoryId: Long, limit: Int, offset: Int): List<LearningStateEntity>
+    @Query("SELECT COUNT(*) FROM learning_state WHERE difficulty = :difficulty")
+    fun getCountByDifficulty(difficulty: String): Flow<Int>
 
-    @Query("SELECT * FROM learning_states WHERE stage = 'LEARNED' LIMIT :limit OFFSET :offset")
-    suspend fun getLearned(limit: Int, offset: Int): List<LearningStateEntity>
-
-    @Query(
-        """
-        SELECT learning_states.* FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.stage = 'LEARNED' AND concepts.categoryId = :categoryId
-        LIMIT :limit OFFSET :offset
-        """
-    )
-    suspend fun getLearnedInCategory(categoryId: Long, limit: Int, offset: Int): List<LearningStateEntity>
-
-    @Query("SELECT COUNT(*) FROM learning_states WHERE stage = :stage")
-    suspend fun countByStage(stage: String): Int
-
-    @Query(
-        """
-        SELECT COUNT(*) FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.stage = :stage AND concepts.categoryId = :categoryId
-        """
-    )
-    suspend fun countByStageInCategory(stage: String, categoryId: Long): Int
-
-    @Query(
-        """
-        SELECT COUNT(*) FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.stage = :stage
-          AND (learning_states.nextReviewAt IS NULL OR learning_states.nextReviewAt <= :now)
-          AND concepts.categoryId = :categoryId
-        """
-    )
-    suspend fun countDueForStageInCategory(stage: String, now: Long, categoryId: Long): Int
-
-    @Query("SELECT COUNT(*) FROM learning_states WHERE difficulty = :difficulty")
-    suspend fun countByDifficultyTotal(difficulty: String): Int
-
-    @Query(
-        """
-        SELECT COUNT(*) FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.difficulty = :difficulty AND concepts.categoryId = :categoryId
-        """
-    )
-    suspend fun countByDifficultyTotalInCategory(difficulty: String, categoryId: Long): Int
-
-    @Query("SELECT COUNT(*) FROM learning_states WHERE stage = 'LEARNED'")
-    suspend fun countLearnedTotal(): Int
-
-    @Query(
-        """
-        SELECT COUNT(*) FROM learning_states
-        INNER JOIN concepts ON concepts.id = learning_states.conceptId
-        WHERE learning_states.stage = 'LEARNED' AND concepts.categoryId = :categoryId
-        """
-    )
-    suspend fun countLearnedTotalInCategory(categoryId: Long): Int
-
-    @Query(
-        """
-        SELECT difficulty, COUNT(*) as count FROM learning_states
-        GROUP BY difficulty
-        """
-    )
-    suspend fun getDifficultySummary(): List<DifficultyCount>
-
-    @Query(
-        """
-        SELECT stage, COUNT(*) as count FROM learning_states
-        GROUP BY stage
-        """
-    )
-    suspend fun getStageSummary(): List<StageCount>
+    @Query("UPDATE learning_state SET streakDays = 0 WHERE lastReviewedAt < :yesterdayMidnight")
+    suspend fun resetStreakIfNotReviewedYesterday(yesterdayMidnight: Long)
 }
-
-data class DifficultyCount(
-    val difficulty: String,
-    val count: Int
-)
-
-data class StageCount(
-    val stage: String,
-    val count: Int
-)

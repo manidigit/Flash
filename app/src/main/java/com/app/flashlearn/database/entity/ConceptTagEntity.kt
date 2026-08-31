@@ -4,27 +4,26 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
-/**
- * جدول واسط Many-to-Many بین Concept و Tag.
- */
 @Entity(
-    tableName = "concept_tags",
+    tableName = "concept_tag",
     primaryKeys = ["conceptId", "tagId"],
     foreignKeys = [
         ForeignKey(
             entity = ConceptEntity::class,
             parentColumns = ["id"],
             childColumns = ["conceptId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = TagEntity::class,
             parentColumns = ["id"],
             childColumns = ["tagId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["tagId"])]
+    indices = [Index("tagId")]
 )
 data class ConceptTagEntity(
     val conceptId: Long,

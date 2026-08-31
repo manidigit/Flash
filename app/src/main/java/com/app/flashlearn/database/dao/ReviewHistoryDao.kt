@@ -2,27 +2,27 @@ package com.app.flashlearn.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.Query
 import com.app.flashlearn.database.entity.ReviewHistoryEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReviewHistoryDao {
-
     @Insert
     suspend fun insert(history: ReviewHistoryEntity): Long
 
-    @androidx.room.Query("SELECT * FROM review_history WHERE conceptId = :conceptId ORDER BY reviewDate DESC")
-    suspend fun getForConcept(conceptId: Long): List<ReviewHistoryEntity>
+    @Query("SELECT * FROM review_history WHERE conceptId = :conceptId ORDER BY reviewDate DESC")
+    fun getByConceptId(conceptId: Long): Flow<List<ReviewHistoryEntity>>
 
-    @androidx.room.Query("SELECT * FROM review_history WHERE sessionId = :sessionId ORDER BY reviewDate ASC")
-    suspend fun getForSession(sessionId: String): List<ReviewHistoryEntity>
+    @Query("SELECT * FROM review_history WHERE sessionId = :sessionId")
+    suspend fun getBySessionId(sessionId: String): List<ReviewHistoryEntity>
 
-    @androidx.room.Query(
-        "SELECT COUNT(*) FROM review_history WHERE reviewDate >= :from AND reviewDate < :to AND isCorrect = 1"
-    )
-    suspend fun countCorrectBetween(from: Long, to: Long): Int
+    @Query("SELECT COUNT(*) FROM review_history WHERE isCorrect = 1")
+    fun getTotalCorrect(): Flow<Int>
 
-    @androidx.room.Query(
-        "SELECT COUNT(*) FROM review_history WHERE reviewDate >= :from AND reviewDate < :to"
-    )
-    suspend fun countTotalBetween(from: Long, to: Long): Int
+    @Query("SELECT COUNT(*) FROM review_history")
+    fun getTotalReviews(): Flow<Int>
+
+    @Query("SELECT * FROM review_history WHERE reviewDate >= :startDate AND reviewDate <= :endDate")
+    fun getByDateRange(startDate: Long, endDate: Long): Flow<List<ReviewHistoryEntity>>
 }
