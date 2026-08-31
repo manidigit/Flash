@@ -59,12 +59,15 @@ fun HomeScreen(
     val dueTotal = state.dueDaily + state.dueWeekly + state.dueMonthly
     val progress = if (state.totalWords == 0) 0f else
         ((state.totalWords - dueTotal).coerceAtLeast(0).toFloat() / state.totalWords)
+    val streakDays = 30  // TODO: Replace with state.streakDays when available
+    val learnedCount = (state.totalWords - state.difficultySummary.values.sum()).coerceAtLeast(0)  // Safe calculation
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(
-            horizontal = Spacing.lg,
-            vertical = Spacing.lg,
+            start = Spacing.lg,
+            end = Spacing.lg,
+            top = Spacing.lg,
             bottom = 80.dp
         ),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
@@ -80,7 +83,7 @@ fun HomeScreen(
                 Column(Modifier.fillMaxWidth().padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("${state.streakDays}", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("$streakDays", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
                             Text("روز پیوسته", style = MaterialTheme.typography.bodySmall, color = Color.White)
                             Text("تعداد روزهایی که از برنامه پشت سر هم بدون وقفه استفاده کردم", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(top = Spacing.xs))
                         }
@@ -114,7 +117,7 @@ fun HomeScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 HomeStat(Icons.Default.CheckCircle, "${state.difficultySummary.values.sum()}", "تمرین شده", Color(0xFF14B8A6), Modifier.weight(1f))
                 HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه", Color(0xFF3B82F6), Modifier.weight(1f))
-                HomeStat(Icons.Default.LocalFireDepartment, "${state.learnedCount}", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
+                HomeStat(Icons.Default.LocalFireDepartment, "$learnedCount", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
             }
         }
 
