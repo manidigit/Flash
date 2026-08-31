@@ -60,8 +60,8 @@ fun HomeScreen(
     val progress = if (state.totalWords == 0) 0f else
         ((state.totalWords - dueTotal).coerceAtLeast(0).toFloat() / state.totalWords)
     val streakDays = 30  // TODO: Replace with state.streakDays when available
-    val learnedCount = (state.totalWords - state.difficultySummary.values.sum()).coerceAtLeast(0)  // Safe calculation
-    val practicedCount = state.difficultySummary.values.sum() + learnedCount  // Any word in any stage except brand new
+    val learnedCount = (state.totalWords - state.difficultySummary.values.sum()).coerceAtLeast(0)  // Words not yet in any stage
+    val practicedCount = state.difficultySummary.values.sum()  // All words that have been reviewed at least once
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -82,11 +82,7 @@ fun HomeScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Row(Modifier.fillMaxWidth().padding(Spacing.lg), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Column {
-                        Text("$streakDays", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text("روز پیوسته", style = MaterialTheme.typography.bodySmall, color = Color.White)
-                    }
-                    Text(languageFlags(state.sourceLanguage, state.targetLanguage), style = MaterialTheme.typography.headlineMedium)
+                    Text("$streakDays روز پیوسته", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -101,7 +97,6 @@ fun HomeScreen(
                                 Text("$dueTotal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                 Text("کلمه منتظر شناخت", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("➕", style = MaterialTheme.typography.headlineSmall)
                         }
                         val duePercentage = if (state.totalWords == 0) 0f else (dueTotal.toFloat() / state.totalWords)
                         ProgressBar(duePercentage, Modifier.fillMaxWidth())
@@ -150,9 +145,9 @@ fun HomeScreen(
             ) {
                 Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Text("مرورهای آماده", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    ReviewTile(Icons.Default.CalendarMonth, "روزانه", state.dueDaily, "مرور امروز", Color(0xFF10B981)) { onStartReview(LearningStage.DAILY) }
-                    ReviewTile(Icons.Default.CalendarMonth, "هفتگی", state.dueWeekly, "تقویت ماندگاری", Color(0xFF3B82F6)) { onStartReview(LearningStage.WEEKLY) }
-                    ReviewTile(Icons.Default.CalendarMonth, "ماهانه", state.dueMonthly, "حافظه بلندمدت", Color(0xFF8B5CF6)) { onStartReview(LearningStage.MONTHLY) }
+                    ReviewTile(Icons.Default.CalendarMonth, "روزانه", state.dueDaily, state.totalWords, "مرور امروز", Color(0xFF10B981)) { onStartReview(LearningStage.DAILY) }
+                    ReviewTile(Icons.Default.CalendarMonth, "هفتگی", state.dueWeekly, state.totalWords, "تقویت ماندگاری", Color(0xFF3B82F6)) { onStartReview(LearningStage.WEEKLY) }
+                    ReviewTile(Icons.Default.CalendarMonth, "ماهانه", state.dueMonthly, state.totalWords, "حافظه بلندمدت", Color(0xFF8B5CF6)) { onStartReview(LearningStage.MONTHLY) }
                 }
             }
         }
@@ -213,7 +208,7 @@ private fun QuickAction(icon: androidx.compose.ui.graphics.vector.ImageVector, t
 }
 
 @Composable
-private fun ReviewTile(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, count: Int, subtitle: String, tint: Color, onClick: () -> Unit) {
+private fun ReviewTile(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, count: Int, total: Int, subtitle: String, tint: Color, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = tint.copy(alpha = .08f)), shape = RoundedCornerShape(Radius.smallCard)) {
         Row(Modifier.padding(Spacing.md), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(42.dp).clip(CircleShape).padding(0.dp), contentAlignment = Alignment.Center) {
@@ -224,7 +219,7 @@ private fun ReviewTile(icon: androidx.compose.ui.graphics.vector.ImageVector, ti
                 Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("$count", style = MaterialTheme.typography.titleLarge, color = tint, fontWeight = FontWeight.Bold)
+                Text("$count از $total", style = MaterialTheme.typography.titleMedium, color = tint, fontWeight = FontWeight.Bold)
                 Text("آماده", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

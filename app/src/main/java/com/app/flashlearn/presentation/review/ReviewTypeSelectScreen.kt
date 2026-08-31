@@ -69,15 +69,16 @@ fun ReviewTypeSelectScreen(
     val modeName = if (selectedMode == ReviewMode.MULTIPLE_CHOICE) "چهارگزینه‌ای" else "فلش‌کارت"
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.lg, vertical = Spacing.lg),
-        verticalArrangement = Arrangement.spacedBy(Spacing.md)
+        modifier = Modifier.fillMaxSize().padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 80.dp)
     ) {
         item {
-            Text("مرور کلمات", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Text("نوع مرور را انتخاب کن و شروع کن.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("مرور کلمات", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("نوع مرور را انتخاب کن.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 CompactDropdown("حالت پاسخ", modeName, modeMenuOpen, { modeMenuOpen = it }, Modifier.weight(1f)) {
                     DropdownMenuItem(text = { Text("چهارگزینه‌ای") }, onClick = { selectedMode = ReviewMode.MULTIPLE_CHOICE; modeMenuOpen = false })
                     DropdownMenuItem(text = { Text("فلش‌کارت") }, onClick = { selectedMode = ReviewMode.FLASHCARD; modeMenuOpen = false })
@@ -89,12 +90,12 @@ fun ReviewTypeSelectScreen(
             }
         }
         item { SectionTitle("زمان‌بندی مرور") }
-        item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) { schedule.forEach { item -> ReviewOption(item, countText(state, item.type), Modifier.weight(1f)) { onStart(item.type, state.selectedCategoryId, selectedMode.name) } } } }
+        item { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) { schedule.forEach { item -> ReviewOption(item, countText(state, item.type), Modifier.weight(1f)) { onStart(item.type, state.selectedCategoryId, selectedMode.name) } } } }
         item { SectionTitle("مرور ویژه") }
-        item { ReviewOption(ReviewType("RANDOM", "تصادفی", "از همه واژه‌های آماده", Icons.Default.Casino, Color(0xFF06B6D4)), countText(state, "RANDOM"), Modifier.fillMaxWidth(), prominent = true) { onStart("RANDOM", state.selectedCategoryId, selectedMode.name) } }
+        item { ReviewOption(ReviewType("RANDOM", "تصادفی", "از همه واژه‌ها", Icons.Default.Casino, Color(0xFF06B6D4)), countText(state, "RANDOM"), Modifier.fillMaxWidth(), prominent = true) { onStart("RANDOM", state.selectedCategoryId, selectedMode.name) } }
         item { SectionTitle("سطح دشواری") }
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 difficulty.take(2).forEach { item -> ReviewOption(item, countText(state, item.type), Modifier.weight(1f)) { onStart(item.type, state.selectedCategoryId, selectedMode.name) } }
             }
         }
