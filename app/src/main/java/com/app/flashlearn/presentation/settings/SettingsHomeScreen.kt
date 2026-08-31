@@ -66,7 +66,9 @@ fun SettingsHomeScreen(
                     Text("جفت زبان فعال", style = MaterialTheme.typography.titleMedium, maxLines = 1)
                     Text(if (pair != null) "${pair.sourceLanguage.uppercase()}  →  ${pair.targetLanguage.uppercase()}" else "تعیین نشده", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text("تغییر", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                OutlinedButton(onClick = viewModel::reverseLanguagePair) {
+                    Text("⇄")
+                }
             }
         }
 

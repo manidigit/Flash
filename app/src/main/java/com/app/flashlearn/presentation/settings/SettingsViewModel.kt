@@ -2,61 +2,62 @@ package com.app.flashlearn.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.flashlearn.domain.model.LanguagePair
-import com.app.flashlearn.domain.repository.LanguagePairRepository
-import com.app.flashlearn.domain.repository.SettingsRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
+import com.app.flashlearn.database.dao.AppSettingsDao
+import com.app.flashlearn.domain.model.AppSettings
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-enum class ThemeMode(val storageValue: String) {
-    LIGHT("light"),
-    DARK("dark"),
-    SYSTEM("system");
-
-    companion object {
-        fun fromStorage(value: String?): ThemeMode = values().firstOrNull { it.storageValue == value } ?: SYSTEM
-    }
-}
+enum class ThemeMode { LIGHT, DARK, SYSTEM }
 
 data class SettingsUiState(
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val activePair: LanguagePair? = null
+    val themeMode: ThemeMode = ThemeMode.DARK,
+    val activePair: com.app.flashlearn.database.entity.LanguagePairEntity? = null,
+    val sourceLanguage: String = "fa",
+    val targetLanguage: String = "en"
 )
 
-/**
- * صفحه Settings (بند 54): تغییر تم (بند 6) و تغییر جهت زبان (بند 71 — بدون تغییر یا Duplicate
- * کردن Vocabulary، فقط رکورد LanguagePair فعال عوض می‌شود).
- */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository,
-    private val languagePairRepository: LanguagePairRepository
+    private val appSettingsDao: AppSettingsDao
 ) : ViewModel() {
+    private val _uiState = MutableStateFlow(SettingsUiState())
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    val uiState: StateFlow<SettingsUiState> = combine(
-        settingsRepository.observeValue(SettingsRepository.THEME_MODE),
-        languagePairRepository.observeActivePair()
-    ) { themeValue, activePair ->
-        SettingsUiState(themeMode = ThemeMode.fromStorage(themeValue), activePair = activePair)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
+    init {
+        appSettingsDao.getSettings().onEach { s ->
+            val settings = s ?: AppSettings()
+            _uiState.value = _uiState.value.copy(
+                themeMode = when (settings.appTheme.uppercase()) {
+                    "LIGHT" -> ThemeMode.LIGHT
+                    "SYSTEM" -> ThemeMode.SYSTEM
+                    else -> ThemeMode.DARK
+                },
+                sourceLanguage = settings.sourceLanguage,
+                targetLanguage = settings.targetLanguage
+            )
+        }.launchIn(viewModelScope)
+    }
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch {
-            settingsRepository.setValue(SettingsRepository.THEME_MODE, mode.storageValue)
+            val current = appSettingsDao.getSettingsSync() ?: AppSettings().let {
+                com.app.flashlearn.database.entity.AppSettingsEntity(
+                    appTheme = it.appTheme,
+                    appLanguage = it.appLanguage,
+                    sourceLanguage = it.sourceLanguage,
+                    targetLanguage = it.targetLanguage
+                )
+            }
+            appSettingsDao.update(current.copy(appTheme = mode.name))
         }
     }
 
-    /** جهت زبان فعال را برعکس می‌کند (مثلاً ES->FA به FA->ES) بدون تغییر دیتای واژگان. */
-    fun swapLanguageDirection() {
-        val pair = uiState.value.activePair ?: return
+    fun reverseLanguagePair() {
         viewModelScope.launch {
-            languagePairRepository.setActivePair(pair.targetLanguage, pair.sourceLanguage)
+            val s = appSettingsDao.getSettingsSync() ?: return@launch
+            appSettingsDao.updateLanguagePair(s.targetLanguage, s.sourceLanguage)
         }
     }
 }

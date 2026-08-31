@@ -17,6 +17,7 @@ interface LanguageDao {
     @Query("SELECT * FROM language ORDER BY displayName ASC")
     fun getAll(): Flow<List<LanguageEntity>>
 
-    @Query("SELECT * FROM language WHERE code IN ('fa', 'en', 'es')")
+    /** Initial product languages. The schema remains extensible for future languages. */
+    @Query("SELECT * FROM language WHERE code IN ('fa', 'en', 'es') ORDER BY displayName ASC")
     fun getSupported(): Flow<List<LanguageEntity>>
 }

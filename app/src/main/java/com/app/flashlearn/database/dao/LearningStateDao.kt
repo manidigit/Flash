@@ -22,7 +22,7 @@ interface LearningStateDao {
     @Query("SELECT * FROM learning_state WHERE conceptId = :conceptId")
     suspend fun getByConceptId(conceptId: Long): LearningStateEntity?
 
-    @Query("SELECT * FROM learning_state WHERE stage = :stage AND nextReviewAt <= :now ORDER BY nextReviewAt ASC")
+    @Query("SELECT * FROM learning_state WHERE stage = :stage AND stage != 'LEARNED' AND nextReviewAt <= :now ORDER BY nextReviewAt ASC")
     fun getReadyForReview(stage: String, now: Long): Flow<List<LearningStateEntity>>
 
     @Query("SELECT * FROM learning_state WHERE stage = :stage")
@@ -31,7 +31,18 @@ interface LearningStateDao {
     @Query("SELECT COUNT(*) FROM learning_state WHERE stage = :stage")
     fun getCountByStage(stage: String): Flow<Int>
 
-    @Query("SELECT COUNT(*) FROM learning_state WHERE difficulty = :difficulty")
+    @Query("SELECT COUNT(*) FROM learning_state WHERE difficulty = :difficulty AND stage != 'LEARNED'")
     fun getCountByDifficulty(difficulty: String): Flow<Int>
-}
 
+    @Query("SELECT COUNT(*) FROM learning_state WHERE stage = 'WEEKLY' AND nextReviewAt <= :now")
+    fun getDueWeekly(now: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM learning_state WHERE stage = 'MONTHLY' AND nextReviewAt <= :now")
+    fun getDueMonthly(now: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM learning_state WHERE stage = 'DAILY' AND nextReviewAt <= :now")
+    fun getDueDaily(now: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM learning_state WHERE stage = 'LEARNED'")
+    fun getLearnedCount(): Flow<Int>
+}

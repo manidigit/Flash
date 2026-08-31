@@ -53,15 +53,17 @@ fun HomeScreen(
     onAddWord: () -> Unit,
     onOpenVocabulary: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onReverseLanguagePair: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val dueTotal = state.dueDaily + state.dueWeekly + state.dueMonthly
     val progress = if (state.totalWords == 0) 0f else
         ((state.totalWords - dueTotal).coerceAtLeast(0).toFloat() / state.totalWords)
-    val streakDays = 30  // TODO: Replace with state.streakDays when available
-    val learnedCount = (state.totalWords - state.difficultySummary.values.sum()).coerceAtLeast(0)  // Words not yet in any stage
-    val practicedCount = state.difficultySummary.values.sum()  // All words that have been reviewed at least once
+    val streakDays = state.streakDays
+    val learnedCount = state.learnedCount
+    val practicedCount = state.practicedCount
+    val unpracticedCount = (state.totalWords - practicedCount).coerceAtLeast(0)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -73,7 +75,7 @@ fun HomeScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(Spacing.md)
     ) {
-        item { HomeHeader(state.sourceLanguage, state.targetLanguage) }
+        item { HomeHeader(state.sourceLanguage, state.targetLanguage, onReverseLanguagePair) }
 
         item {
             Card(
@@ -110,7 +112,21 @@ fun HomeScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 HomeStat(Icons.Default.CheckCircle, "$practicedCount", "تمرین شده", Color(0xFF14B8A6), Modifier.weight(1f))
                 HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه", Color(0xFF3B82F6), Modifier.weight(1f))
-                HomeStat(Icons.Default.LocalFireDepartment, "$learnedCount", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
+                HomeStat(Icons.Default.LocalFireDepartment, "$learnedCount", "یادگرفته", Color(0xFFF97316), Modifier.weight(1f))
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                HomeStat(Icons.Default.MenuBook, "$unpracticedCount", "تمرین نشده", Color(0xFF64748B), Modifier.weight(1f))
+                HomeStat(Icons.Default.CalendarMonth, "${state.weeklyCount}", "کل هفتگی", Color(0xFF3B82F6), Modifier.weight(1f))
+                HomeStat(Icons.Default.CalendarMonth, "${state.dueWeekly}", "آماده هفتگی", Color(0xFF0EA5E9), Modifier.weight(1f))
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                HomeStat(Icons.Default.CalendarMonth, "${state.monthlyCount}", "کل ماهانه", Color(0xFF8B5CF6), Modifier.weight(1f))
+                HomeStat(Icons.Default.CalendarMonth, "${state.dueMonthly}", "آماده ماهانه", Color(0xFFA855F7), Modifier.weight(1f))
+                HomeStat(Icons.Default.LocalFireDepartment, "$streakDays", "روز پیوسته", Color(0xFFF97316), Modifier.weight(1f))
             }
         }
 
@@ -169,10 +185,15 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHeader(source: String, target: String) {
+private fun HomeHeader(source: String, target: String, onReverse: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Text("سلام مانی!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Text(languageFlags(source, target), style = MaterialTheme.typography.headlineMedium)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(languageFlags(source, target), style = MaterialTheme.typography.headlineMedium)
+            androidx.compose.material3.IconButton(onClick = onReverse) {
+                Text("⇄", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 
@@ -237,7 +258,10 @@ private fun DifficultyLine(label: String, count: Int, total: Int, level: Int) {
 
 private fun languageFlags(source: String, target: String): String {
     fun flag(code: String): String = when (code.lowercase()) {
-        "es" -> "🇪🇸"; "fa" -> "🇮🇷"; "en" -> "🇬🇧"; "fr" -> "🇫🇷"; "de" -> "🇩🇪"; "it" -> "🇮🇹"; "pt" -> "🇵🇹"; "ru" -> "🇷🇺"; "ar" -> "🇸🇦"; "tr" -> "🇹🇷"; "zh" -> "🇨🇳"; "ja" -> "🇯🇵"; "ko" -> "🇰🇷"; "nl" -> "🇳🇱"; "pl" -> "🇵🇱"; else -> "🌐"
+        "fa" -> "🇮🇷"
+        "en" -> "🇬🇧"
+        "es" -> "🇪🇸"
+        else -> "🌐"
     }
     return if (source.isNotBlank() && target.isNotBlank()) "${flag(source)}  ${flag(target)}" else "🌐"
 }
