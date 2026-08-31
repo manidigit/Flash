@@ -61,6 +61,7 @@ fun HomeScreen(
         ((state.totalWords - dueTotal).coerceAtLeast(0).toFloat() / state.totalWords)
     val streakDays = 30  // TODO: Replace with state.streakDays when available
     val learnedCount = (state.totalWords - state.difficultySummary.values.sum()).coerceAtLeast(0)  // Safe calculation
+    val practicedCount = state.difficultySummary.values.sum() + learnedCount  // Any word in any stage except brand new
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -80,16 +81,12 @@ fun HomeScreen(
                 shape = RoundedCornerShape(Radius.card),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Column(Modifier.fillMaxWidth().padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Column {
-                            Text("$streakDays", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
-                            Text("روز پیوسته", style = MaterialTheme.typography.bodySmall, color = Color.White)
-                            Text("تعداد روزهایی که از برنامه پشت سر هم بدون وقفه استفاده کردم", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(top = Spacing.xs))
-                        }
-                        Text(languageFlags(state.sourceLanguage, state.targetLanguage), style = MaterialTheme.typography.headlineMedium)
+                Row(Modifier.fillMaxWidth().padding(Spacing.lg), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text("$streakDays", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("روز پیوسته", style = MaterialTheme.typography.bodySmall, color = Color.White)
                     }
-                    Text("زبان هایی که داربم استفاده میکنیم برای آموزش زبان", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
+                    Text(languageFlags(state.sourceLanguage, state.targetLanguage), style = MaterialTheme.typography.headlineMedium)
                 }
             }
         }
@@ -97,17 +94,18 @@ fun HomeScreen(
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Card(modifier = Modifier.weight(1f), shape = RoundedCornerShape(Radius.card)) {
-                    Row(Modifier.fillMaxWidth().padding(Spacing.md), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                        Icon(Icons.Default.MenuBook, null, modifier = Modifier.size(32.dp))
-                        Column {
-                            Text("$dueTotal", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text("کلمه منتظر شناخت", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.fillMaxWidth().padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                            Icon(Icons.Default.MenuBook, null, modifier = Modifier.size(24.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("$dueTotal", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text("کلمه منتظر شناخت", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text("➕", style = MaterialTheme.typography.headlineSmall)
                         }
-                    }
-                }
-                Card(modifier = Modifier.width(56.dp), shape = RoundedCornerShape(Radius.card), colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))) {
-                    Box(Modifier.fillMaxWidth().padding(Spacing.md), contentAlignment = Alignment.Center) {
-                        Text("➕", style = MaterialTheme.typography.headlineSmall)
+                        val duePercentage = if (state.totalWords == 0) 0f else (dueTotal.toFloat() / state.totalWords)
+                        ProgressBar(duePercentage, Modifier.fillMaxWidth())
+                        Text("${(duePercentage * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -115,7 +113,7 @@ fun HomeScreen(
 
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                HomeStat(Icons.Default.CheckCircle, "${state.difficultySummary.values.sum()}", "تمرین شده", Color(0xFF14B8A6), Modifier.weight(1f))
+                HomeStat(Icons.Default.CheckCircle, "$practicedCount", "تمرین شده", Color(0xFF14B8A6), Modifier.weight(1f))
                 HomeStat(Icons.Default.School, "${state.totalWords}", "کل واژه", Color(0xFF3B82F6), Modifier.weight(1f))
                 HomeStat(Icons.Default.LocalFireDepartment, "$learnedCount", "یادگرفته شده", Color(0xFFF97316), Modifier.weight(1f))
             }
@@ -140,13 +138,7 @@ fun HomeScreen(
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 ActionButton("مرور کلمات", Icons.Default.MenuBook, Modifier.weight(1f)) { onStartReview(LearningStage.DAILY) }
                 ActionButton("آمار و گزارش", Icons.Default.BarChart, Modifier.weight(1f), onOpenStatistics)
-            }
-        }
-
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 ActionButton("واژگان", Icons.Default.MenuBook, Modifier.weight(1f), onOpenVocabulary)
-                ActionButton("تنظیمات", Icons.Default.Settings, Modifier.weight(1f), onOpenSettings)
             }
         }
 
@@ -183,12 +175,9 @@ fun HomeScreen(
 
 @Composable
 private fun HomeHeader(source: String, target: String) {
-    Column(Modifier.fillMaxWidth()) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Text("سلام مانی!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("به فلسطرین خوش آمدی", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(languageFlags(source, target), style = MaterialTheme.typography.headlineMedium)
-        }
+        Text(languageFlags(source, target), style = MaterialTheme.typography.headlineMedium)
     }
 }
 
