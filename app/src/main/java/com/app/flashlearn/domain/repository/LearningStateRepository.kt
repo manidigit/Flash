@@ -10,5 +10,4 @@ interface LearningStateRepository {
     fun getByStage(stage: String): Flow<List<LearningState>>
     fun getCountByStage(stage: String): Flow<Int>
     fun getCountByDifficulty(difficulty: String): Flow<Int>
-    suspend fun resetStreakIfNotReviewedYesterday(yesterdayMidnight: Long)
 }

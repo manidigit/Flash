@@ -33,7 +33,5 @@ interface LearningStateDao {
 
     @Query("SELECT COUNT(*) FROM learning_state WHERE difficulty = :difficulty")
     fun getCountByDifficulty(difficulty: String): Flow<Int>
-
-    @Query("UPDATE learning_state SET streakDays = 0 WHERE lastReviewedAt < :yesterdayMidnight")
-    suspend fun resetStreakIfNotReviewedYesterday(yesterdayMidnight: Long)
 }
+

@@ -40,10 +40,6 @@ class LearningStateRepositoryImpl @Inject constructor(
         return learningStateDao.getCountByDifficulty(difficulty)
     }
 
-    override suspend fun resetStreakIfNotReviewedYesterday(yesterdayMidnight: Long) {
-        learningStateDao.resetStreakIfNotReviewedYesterday(yesterdayMidnight)
-    }
-
     private fun LearningState.toEntity() = LearningStateEntity(
         conceptId = conceptId,
         stage = stage,
