@@ -2,22 +2,41 @@ package com.app.flashlearn.data.repository
 
 import com.app.flashlearn.database.dao.AppSettingsDao
 import com.app.flashlearn.database.entity.AppSettingsEntity
+import com.app.flashlearn.domain.model.AppSettings
 import com.app.flashlearn.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class SettingsRepositoryImpl @Inject constructor(
-    private val dao: AppSettingsDao
+    private val appSettingsDao: AppSettingsDao
 ) : SettingsRepository {
 
-    override suspend fun setValue(key: String, value: String) {
-        dao.set(AppSettingsEntity(key = key, value = value))
+    override fun getSettings(): Flow<AppSettings> {
+        return appSettingsDao.getSettings().map { entity ->
+            entity?.toDomain() ?: AppSettings()
+        }
     }
 
-    override suspend fun getValue(key: String): String? =
-        dao.get(key)?.value
+    override suspend fun getSettingsSync(): AppSettings {
+        return appSettingsDao.getSettingsSync()?.toDomain() ?: AppSettings()
+    }
 
-    override fun observeValue(key: String): Flow<String?> =
-        dao.observe(key).map { it?.value }
+    override suspend fun updateStreakDays(days: Int) {
+        appSettingsDao.updateStreakDays(days)
+    }
+
+    override suspend fun swapLanguagePair() {
+        val current = getSettingsSync()
+        appSettingsDao.updateLanguagePair(current.targetLanguage, current.sourceLanguage)
+    }
+
+    private fun AppSettingsEntity.toDomain() = AppSettings(
+        streakDays = streakDays,
+        lastReviewDate = lastReviewDate,
+        appTheme = appTheme,
+        appLanguage = appLanguage,
+        sourceLanguage = sourceLanguage,
+        targetLanguage = targetLanguage
+    )
 }
