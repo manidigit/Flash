@@ -30,8 +30,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ReviewHistoryEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val conceptId: Long,
     val sessionId: String,
     val reviewStage: String,

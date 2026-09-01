@@ -19,12 +19,9 @@ interface ContentDao {
     @Delete
     suspend fun delete(content: ContentEntity)
 
-    @Query("SELECT * FROM content WHERE conceptId = :conceptId AND languageCode = :languageCode LIMIT 1")
-    suspend fun getByConceptAndLanguage(conceptId: Long, languageCode: String): ContentEntity?
+    @Query("SELECT * FROM content WHERE conceptId = :conceptId AND languageCode = :lang LIMIT 1")
+    suspend fun getByConceptAndLanguage(conceptId: Long, lang: String): ContentEntity?
 
     @Query("SELECT * FROM content WHERE conceptId = :conceptId")
     suspend fun getByConceptId(conceptId: Long): List<ContentEntity>
-
-    @Query("SELECT * FROM content WHERE languageCode = :languageCode")
-    fun getByLanguage(languageCode: String): Flow<List<ContentEntity>>
 }

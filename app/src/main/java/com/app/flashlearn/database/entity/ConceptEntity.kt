@@ -23,11 +23,10 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ConceptEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val uuid: String,
-    val contentType: String, // WORD / PHRASE / SENTENCE / IDIOM / VERB / EXPRESSION / DIALOGUE
-    val categoryId: Long?,
+    val contentType: String,
+    val categoryId: Long? = null,
     val favorite: Boolean = false,
     val active: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),

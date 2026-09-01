@@ -5,8 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "language")
 data class LanguageEntity(
-    @PrimaryKey
-    val code: String, // fa, en, es
+    @PrimaryKey val code: String,
     val displayName: String,
-    val flagEmoji: String // 🇮🇷, 🇬🇧, 🇪🇸
+    val flagEmoji: String
 )

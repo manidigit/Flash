@@ -23,14 +23,13 @@ import androidx.room.PrimaryKey
     ]
 )
 data class LearningStateEntity(
-    @PrimaryKey
-    val conceptId: Long,
-    val stage: String, // DAILY / WEEKLY / MONTHLY / LEARNED
-    val difficulty: String = "EASY", // EASY / MEDIUM / HARD / VERY_HARD
-    val nextReviewAt: Long = 0, // NOT NULL - مقدار پیش‌فرض 0 (بدان معنی بلافاصله تمرین شود)
+    @PrimaryKey val conceptId: Long,
+    val stage: String = "DAILY",
+    val difficulty: String = "EASY",
+    val nextReviewAt: Long = 0,
     val monthlyWrongCount: Int = 0,
     val totalCorrect: Int = 0,
     val totalWrong: Int = 0,
     val lastReviewedAt: Long? = null,
-    val hasFailedInCurrentCycle: Boolean = false // اصلاح: برای تعیین firstTimeSuccessAllStages
+    val hasFailedInCurrentCycle: Boolean = false
 )

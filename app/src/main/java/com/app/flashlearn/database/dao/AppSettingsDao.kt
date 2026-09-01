@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AppSettingsDao {
-    @Insert
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
     suspend fun insert(settings: AppSettingsEntity)
 
     @Update
@@ -23,9 +23,6 @@ interface AppSettingsDao {
 
     @Query("UPDATE app_settings SET streakDays = :days WHERE id = 0")
     suspend fun updateStreakDays(days: Int)
-
-    @Query("UPDATE app_settings SET lastReviewDate = :date WHERE id = 0")
-    suspend fun updateLastReviewDate(date: Long)
 
     @Query("UPDATE app_settings SET sourceLanguage = :source, targetLanguage = :target WHERE id = 0")
     suspend fun updateLanguagePair(source: String, target: String)

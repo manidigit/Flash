@@ -11,17 +11,9 @@ import javax.inject.Inject
 class ConceptRepositoryImpl @Inject constructor(
     private val conceptDao: ConceptDao
 ) : ConceptRepository {
-    
+
     override suspend fun insertConcept(concept: Concept): Long {
         return conceptDao.insert(concept.toEntity())
-    }
-
-    override suspend fun updateConcept(concept: Concept) {
-        conceptDao.update(concept.toEntity())
-    }
-
-    override suspend fun deleteConcept(concept: Concept) {
-        conceptDao.delete(concept.toEntity())
     }
 
     override suspend fun getConceptById(id: Long): Concept? {
@@ -32,10 +24,6 @@ class ConceptRepositoryImpl @Inject constructor(
         return conceptDao.getAllActive().map { entities ->
             entities.map { it.toDomain() }
         }
-    }
-
-    override fun getActiveConceptCount(): Flow<Int> {
-        return conceptDao.getActiveCount()
     }
 
     private fun Concept.toEntity() = ConceptEntity(

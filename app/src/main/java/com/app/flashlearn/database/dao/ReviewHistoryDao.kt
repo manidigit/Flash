@@ -11,7 +11,7 @@ interface ReviewHistoryDao {
     @Insert
     suspend fun insert(history: ReviewHistoryEntity): Long
 
-    @Query("SELECT * FROM review_history WHERE conceptId = :conceptId ORDER BY reviewDate DESC")
+    @Query("SELECT * FROM review_history WHERE conceptId = :conceptId")
     fun getByConceptId(conceptId: Long): Flow<List<ReviewHistoryEntity>>
 
     @Query("SELECT * FROM review_history WHERE sessionId = :sessionId")
@@ -22,7 +22,4 @@ interface ReviewHistoryDao {
 
     @Query("SELECT COUNT(*) FROM review_history")
     fun getTotalReviews(): Flow<Int>
-
-    @Query("SELECT * FROM review_history WHERE reviewDate >= :startDate AND reviewDate <= :endDate")
-    fun getByDateRange(startDate: Long, endDate: Long): Flow<List<ReviewHistoryEntity>>
 }

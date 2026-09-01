@@ -22,7 +22,7 @@ interface LearningStateDao {
     @Query("SELECT * FROM learning_state WHERE conceptId = :conceptId")
     suspend fun getByConceptId(conceptId: Long): LearningStateEntity?
 
-    @Query("SELECT * FROM learning_state WHERE stage = :stage AND nextReviewAt <= :now ORDER BY nextReviewAt ASC")
+    @Query("SELECT * FROM learning_state WHERE stage = :stage AND nextReviewAt <= :now")
     fun getReadyForReview(stage: String, now: Long): Flow<List<LearningStateEntity>>
 
     @Query("SELECT * FROM learning_state WHERE stage = :stage")
@@ -34,4 +34,3 @@ interface LearningStateDao {
     @Query("SELECT COUNT(*) FROM learning_state WHERE difficulty = :difficulty")
     fun getCountByDifficulty(difficulty: String): Flow<Int>
 }
-

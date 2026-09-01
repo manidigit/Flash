@@ -8,8 +8,5 @@ data class Concept(
     val favorite: Boolean,
     val active: Boolean,
     val createdAt: Long,
-    val updatedAt: Long,
-    val contents: List<Content> = emptyList(),
-    val tags: List<String> = emptyList(),
-    val learningState: LearningState? = null
+    val updatedAt: Long
 )

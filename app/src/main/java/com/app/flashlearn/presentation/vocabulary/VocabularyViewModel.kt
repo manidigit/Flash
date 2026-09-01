@@ -15,7 +15,7 @@ import javax.inject.Inject
 class VocabularyViewModel @Inject constructor(
     private val conceptRepository: ConceptRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(VocabularyUiState())
     val uiState: StateFlow<VocabularyUiState> = _uiState.asStateFlow()
 

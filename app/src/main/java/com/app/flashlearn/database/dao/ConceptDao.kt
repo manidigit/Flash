@@ -22,7 +22,7 @@ interface ConceptDao {
     @Query("SELECT * FROM concept WHERE id = :id")
     suspend fun getById(id: Long): ConceptEntity?
 
-    @Query("SELECT * FROM concept WHERE active = 1 ORDER BY createdAt DESC")
+    @Query("SELECT * FROM concept WHERE active = 1")
     fun getAllActive(): Flow<List<ConceptEntity>>
 
     @Query("SELECT COUNT(*) FROM concept WHERE active = 1")

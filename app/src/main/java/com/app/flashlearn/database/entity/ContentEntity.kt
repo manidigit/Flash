@@ -30,8 +30,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ContentEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val conceptId: Long,
     val languageCode: String,
     val text: String,

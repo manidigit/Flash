@@ -5,9 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "review_session")
 data class ReviewSessionEntity(
-    @PrimaryKey
-    val id: String, // مثال: "2026-08-31-001"
+    @PrimaryKey val id: String,
     val startedAt: Long,
     val endedAt: Long? = null,
-    val reviewType: String // DAILY / WEEKLY / MONTHLY / RANDOM
+    val reviewType: String
 )

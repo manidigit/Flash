@@ -26,10 +26,6 @@ class AppSettingsRepositoryImpl @Inject constructor(
         appSettingsDao.updateStreakDays(days)
     }
 
-    override suspend fun updateLastReviewDate(date: Long) {
-        appSettingsDao.updateLastReviewDate(date)
-    }
-
     override suspend fun swapLanguagePair() {
         val current = getSettingsSync()
         appSettingsDao.updateLanguagePair(current.targetLanguage, current.sourceLanguage)
