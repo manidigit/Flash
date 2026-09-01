@@ -41,9 +41,6 @@ object DatabaseModule {
     @Provides
     fun provideAppSettingsDao(database: FlashLearnDatabase): AppSettingsDao = database.appSettingsDao()
 
-    @Provides
-    fun provideLanguageDao(database: FlashLearnDatabase): LanguageDao = database.languageDao()
-
     @Singleton
     @Provides
     fun provideConceptRepository(
