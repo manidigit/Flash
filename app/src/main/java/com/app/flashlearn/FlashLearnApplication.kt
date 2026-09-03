@@ -14,4 +14,40 @@ import dagger.hilt.android.HiltAndroidApp
  * MainActivity.kt) تا تضمین شود همیشه قبل از هر تعامل کاربر (از جمله Import) کامل شده.
  */
 @HiltAndroidApp
-class FlashLearnApplication : Application()
+class FlashLearnApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        installCrashLogger()
+    }
+
+    /**
+     * چون دسترسی به adb logcat روی گوشی بدون کامپیوتر سخت است، هر Crash خام قبل از
+     * اینکه سیستم اپ را ببندد، در یک فایل متنی ساده در حافظه داخلی اپ نوشته می‌شود.
+     * این فایل با Termux قابل خواندن است، بدون نیاز به هیچ‌گونه دسترسی خاص:
+     *   cat /data/data/com.app.flashlearn/files/crash_log.txt   (نیاز به run-as دارد)
+     * یا ساده‌تر، مسیر بیرونی:
+     *   ls /sdcard/Android/data/com.app.flashlearn/files/
+     */
+    private fun installCrashLogger() {
+        val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val logText = buildString {
+                    appendLine("=== FlashLearn Crash Log ===")
+                    appendLine("Time: ${java.util.Date()}")
+                    appendLine("Thread: ${thread.name}")
+                    appendLine()
+                    appendLine(android.util.Log.getStackTraceString(throwable))
+                }
+                getExternalFilesDir(null)?.let { dir ->
+                    java.io.File(dir, "crash_log.txt").writeText(logText)
+                }
+                java.io.File(filesDir, "crash_log.txt").writeText(logText)
+            } catch (loggingError: Exception) {
+                // اگر نوشتن لاگ خودش شکست خورد، حداقل جلوی هندلر اصلی را نمی‌گیریم.
+            }
+            previousHandler?.uncaughtException(thread, throwable)
+        }
+    }
+}
