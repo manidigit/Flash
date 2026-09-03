@@ -36,6 +36,8 @@ import com.app.flashlearn.R
 import com.app.flashlearn.domain.model.Concept
 import com.app.flashlearn.domain.model.Difficulty
 import com.app.flashlearn.domain.model.VocabularySortOrder
+import com.app.flashlearn.domain.model.contentFor
+import com.app.flashlearn.domain.model.contentsFor
 import com.app.flashlearn.ui.theme.DifficultyBadge
 import com.app.flashlearn.ui.theme.EmptyState
 import com.app.flashlearn.ui.theme.Radius

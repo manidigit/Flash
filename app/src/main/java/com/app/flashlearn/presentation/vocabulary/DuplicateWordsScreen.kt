@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.flashlearn.R
 import com.app.flashlearn.domain.model.Concept
+import com.app.flashlearn.domain.model.contentsFor
 import com.app.flashlearn.ui.theme.Spacing
 
 /**

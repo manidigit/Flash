@@ -42,6 +42,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.app.flashlearn.R
 import com.app.flashlearn.domain.model.ContentItem
 import com.app.flashlearn.domain.model.ReviewMode
+import com.app.flashlearn.domain.model.contentFor
+import com.app.flashlearn.domain.model.contentsFor
 import com.app.flashlearn.ui.theme.FlashLearnExtras
 import com.app.flashlearn.ui.theme.Spacing
 

@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.core.util.DateTimeUtils
 import com.app.flashlearn.domain.model.Concept
+import com.app.flashlearn.domain.model.contentFor
+import com.app.flashlearn.domain.model.contentsFor
 import com.app.flashlearn.domain.model.Difficulty
 import com.app.flashlearn.domain.model.LearningStage
 import com.app.flashlearn.domain.model.LearningState

@@ -40,34 +40,60 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        combine(
+        val group1 = combine(
             appSettingsDao.getSettings(),
             conceptDao.getActiveCount(),
             learningStateDao.getCountByStage("WEEKLY"),
             learningStateDao.getCountByStage("MONTHLY"),
-            learningStateDao.getReadyForReview("DAILY", System.currentTimeMillis()).map { it.size },
+            learningStateDao.getReadyForReview("DAILY", System.currentTimeMillis()).map { it.size }
+        ) { settings, total, weekly, monthly, dailyDue ->
+            HomeGroup1(settings?.sourceLanguage ?: "fa", settings?.targetLanguage ?: "en", total, weekly, monthly, dailyDue)
+        }
+
+        val group2 = combine(
             learningStateDao.getReadyForReview("WEEKLY", System.currentTimeMillis()).map { it.size },
             learningStateDao.getReadyForReview("MONTHLY", System.currentTimeMillis()).map { it.size },
             reviewHistoryDao.getPracticedConceptCount(),
             learningStateDao.getLearnedCount(),
             reviewHistoryDao.getReviewDates()
-        ) { settings, total, weekly, monthly, dailyDue, weeklyDue, monthlyDue, practiced, learned, dates ->
+        ) { weeklyDue, monthlyDue, practiced, learned, dates ->
+            HomeGroup2(weeklyDue, monthlyDue, practiced, learned, dates)
+        }
+
+        combine(group1, group2) { g1, g2 ->
             HomeUiState(
-                sourceLanguage = settings?.sourceLanguage ?: "fa",
-                targetLanguage = settings?.targetLanguage ?: "en",
-                totalWords = total,
-                dueDaily = dailyDue,
-                dueWeekly = weeklyDue,
-                dueMonthly = monthlyDue,
-                weeklyCount = weekly,
-                monthlyCount = monthly,
-                practicedCount = practiced,
-                learnedCount = learned,
-                streakDays = calculateStreak(dates)
+                sourceLanguage = g1.sourceLanguage,
+                targetLanguage = g1.targetLanguage,
+                totalWords = g1.total,
+                dueDaily = g1.dailyDue,
+                dueWeekly = g2.weeklyDue,
+                dueMonthly = g2.monthlyDue,
+                weeklyCount = g1.weekly,
+                monthlyCount = g1.monthly,
+                practicedCount = g2.practiced,
+                learnedCount = g2.learned,
+                streakDays = calculateStreak(g2.dates)
             )
         }.onEach { _uiState.value = it }
             .launchIn(viewModelScope)
     }
+
+    private data class HomeGroup1(
+        val sourceLanguage: String,
+        val targetLanguage: String,
+        val total: Int,
+        val weekly: Int,
+        val monthly: Int,
+        val dailyDue: Int
+    )
+
+    private data class HomeGroup2(
+        val weeklyDue: Int,
+        val monthlyDue: Int,
+        val practiced: Int,
+        val learned: Int,
+        val dates: List<Long>
+    )
 
     fun reverseLanguagePair() {
         viewModelScope.launch {
