@@ -1,7 +1,10 @@
 package com.app.flashlearn.data.repository
 
+import com.app.flashlearn.data.mapper.toDomain
+import com.app.flashlearn.data.mapper.toEntity
 import com.app.flashlearn.database.dao.LearningStateDao
-import com.app.flashlearn.database.entity.LearningStateEntity
+import com.app.flashlearn.domain.model.Difficulty
+import com.app.flashlearn.domain.model.LearningStage
 import com.app.flashlearn.domain.model.LearningState
 import com.app.flashlearn.domain.repository.LearningStateRepository
 import kotlinx.coroutines.flow.Flow
@@ -9,58 +12,46 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class LearningStateRepositoryImpl @Inject constructor(
-    private val learningStateDao: LearningStateDao
+    private val dao: LearningStateDao
 ) : LearningStateRepository {
 
-    override suspend fun insertOrUpdateLearningState(state: LearningState) {
-        learningStateDao.insert(state.toEntity())
-    }
+    override suspend fun get(conceptId: Long): LearningState? = dao.get(conceptId)?.toDomain()
 
-    override suspend fun getLearningStateByConceptId(conceptId: Long): LearningState? {
-        return learningStateDao.getByConceptId(conceptId)?.toDomain()
-    }
+    override suspend fun save(state: LearningState) = dao.insert(state.toEntity())
 
-    override fun getReadyForReview(stage: String): Flow<List<LearningState>> {
-        return learningStateDao.getReadyForReview(stage, System.currentTimeMillis()).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
+    override suspend fun getDue(stage: LearningStage, now: Long, limit: Int, categoryId: Long?): List<LearningState> =
+        dao.getDue(stage.name, now, limit, categoryId).map { it.toDomain() }
 
-    override fun getByStage(stage: String): Flow<List<LearningState>> {
-        return learningStateDao.getByStage(stage).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
+    override suspend fun getByDifficulty(difficulty: Difficulty, limit: Int, offset: Int, categoryId: Long?): List<LearningState> =
+        dao.getByDifficulty(difficulty.name, limit, offset, categoryId).map { it.toDomain() }
 
-    override fun getCountByStage(stage: String): Flow<Int> {
-        return learningStateDao.getCountByStage(stage)
-    }
+    override suspend fun getLearned(limit: Int, offset: Int, categoryId: Long?): List<LearningState> =
+        dao.getLearned(limit, offset, categoryId).map { it.toDomain() }
 
-    override fun getCountByDifficulty(difficulty: String): Flow<Int> {
-        return learningStateDao.getCountByDifficulty(difficulty)
-    }
+    override suspend fun countTotal(stage: LearningStage, categoryId: Long?): Int =
+        dao.countTotal(stage.name, categoryId)
 
-    private fun LearningState.toEntity() = LearningStateEntity(
-        conceptId = conceptId,
-        stage = stage,
-        difficulty = difficulty,
-        nextReviewAt = nextReviewAt,
-        monthlyWrongCount = monthlyWrongCount,
-        totalCorrect = totalCorrect,
-        totalWrong = totalWrong,
-        lastReviewedAt = lastReviewedAt,
-        hasFailedInCurrentCycle = hasFailedInCurrentCycle
-    )
+    override suspend fun countDue(stage: LearningStage, now: Long, categoryId: Long?): Int =
+        dao.countDue(stage.name, now, categoryId)
 
-    private fun LearningStateEntity.toDomain() = LearningState(
-        conceptId = conceptId,
-        stage = stage,
-        difficulty = difficulty,
-        nextReviewAt = nextReviewAt,
-        monthlyWrongCount = monthlyWrongCount,
-        totalCorrect = totalCorrect,
-        totalWrong = totalWrong,
-        lastReviewedAt = lastReviewedAt,
-        hasFailedInCurrentCycle = hasFailedInCurrentCycle
-    )
+    override suspend fun countByDifficulty(difficulty: Difficulty, categoryId: Long?): Int =
+        dao.countByDifficulty(difficulty.name, categoryId)
+
+    override suspend fun countLearned(categoryId: Long?): Int =
+        dao.countLearned(categoryId)
+
+    override suspend fun getStageSummary(): Map<LearningStage, Int> =
+        dao.getStageSummaryRaw().mapNotNull { row ->
+            runCatching { LearningStage.valueOf(row.stage) }.getOrNull()?.let { it to row.count }
+        }.toMap()
+
+    override suspend fun getDifficultySummary(): Map<Difficulty, Int> =
+        dao.getDifficultySummaryRaw().mapNotNull { row ->
+            runCatching { Difficulty.valueOf(row.difficulty) }.getOrNull()?.let { it to row.count }
+        }.toMap()
+
+    override fun getLearnedCount(): Flow<Int> = dao.getLearnedCount()
+
+    override fun getReadyForReview(stage: String, now: Long): Flow<List<LearningState>> =
+        dao.getReadyForReview(stage, now).map { list -> list.map { it.toDomain() } }
 }

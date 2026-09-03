@@ -5,26 +5,15 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/** بدون Unique روی (conceptId, languageCode): یک کلمه می‌تواند چند معنی در یک زبان داشته باشد (بند 64). */
 @Entity(
-    tableName = "content",
+    tableName = "contents",
     foreignKeys = [
-        ForeignKey(
-            entity = ConceptEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["conceptId"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = LanguageEntity::class,
-            parentColumns = ["code"],
-            childColumns = ["languageCode"],
-            onDelete = ForeignKey.RESTRICT,
-            onUpdate = ForeignKey.CASCADE
-        )
+        ForeignKey(entity = ConceptEntity::class, parentColumns = ["id"], childColumns = ["conceptId"], onDelete = ForeignKey.CASCADE, onUpdate = ForeignKey.CASCADE),
+        ForeignKey(entity = LanguageEntity::class, parentColumns = ["code"], childColumns = ["languageCode"], onDelete = ForeignKey.RESTRICT, onUpdate = ForeignKey.CASCADE)
     ],
     indices = [
-        Index("conceptId", "languageCode", unique = true),
+        Index("conceptId", "languageCode"),
         Index("languageCode"),
         Index("text")
     ]

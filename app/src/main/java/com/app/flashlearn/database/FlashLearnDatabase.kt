@@ -14,7 +14,9 @@ import com.app.flashlearn.database.entity.*
         LearningStateEntity::class,
         ReviewSessionEntity::class,
         ReviewHistoryEntity::class,
-        AppSettingsEntity::class
+        AppSettingsEntity::class,
+        TagEntity::class,
+        ConceptTagEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -28,6 +30,7 @@ abstract class FlashLearnDatabase : RoomDatabase() {
     abstract fun reviewSessionDao(): ReviewSessionDao
     abstract fun reviewHistoryDao(): ReviewHistoryDao
     abstract fun appSettingsDao(): AppSettingsDao
+    abstract fun tagDao(): TagDao
 
     companion object {
         const val DATABASE_NAME = "flashlearn.db"

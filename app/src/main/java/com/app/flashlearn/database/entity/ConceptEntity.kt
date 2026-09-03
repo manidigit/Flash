@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "concept",
+    tableName = "concepts",
     foreignKeys = [
         ForeignKey(
             entity = CategoryEntity::class,
@@ -30,5 +30,6 @@ data class ConceptEntity(
     val favorite: Boolean = false,
     val active: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val notes: String? = null
 )

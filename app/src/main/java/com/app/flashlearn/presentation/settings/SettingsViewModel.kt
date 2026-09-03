@@ -13,7 +13,6 @@ enum class ThemeMode { LIGHT, DARK, SYSTEM }
 
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.DARK,
-    val activePair: com.app.flashlearn.database.entity.LanguagePairEntity? = null,
     val sourceLanguage: String = "fa",
     val targetLanguage: String = "en"
 )

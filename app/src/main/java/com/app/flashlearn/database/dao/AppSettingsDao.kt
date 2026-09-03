@@ -2,6 +2,7 @@ package com.app.flashlearn.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.app.flashlearn.database.entity.AppSettingsEntity
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AppSettingsDao {
-    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(settings: AppSettingsEntity)
 
     @Update
@@ -24,6 +25,6 @@ interface AppSettingsDao {
     @Query("UPDATE app_settings SET streakDays = :days WHERE id = 0")
     suspend fun updateStreakDays(days: Int)
 
-    @Query("UPDATE app_settings SET sourceLanguage = :source, targetLanguage = :target WHERE id = 0")
+    @Query("UPDATE app_settings SET sourceLanguage = :source, targetLanguage = :target, onboardingCompleted = 1 WHERE id = 0")
     suspend fun updateLanguagePair(source: String, target: String)
 }

@@ -37,6 +37,7 @@ class SettingsRepositoryImpl @Inject constructor(
         appTheme = appTheme,
         appLanguage = appLanguage,
         sourceLanguage = sourceLanguage,
-        targetLanguage = targetLanguage
+        targetLanguage = targetLanguage,
+        onboardingCompleted = onboardingCompleted
     )
 }

@@ -14,6 +14,6 @@ interface ReviewSessionDao {
     @Update
     suspend fun update(session: ReviewSessionEntity)
 
-    @Query("SELECT * FROM review_session WHERE id = :id")
+    @Query("SELECT * FROM review_sessions WHERE id = :id")
     suspend fun getById(id: String): ReviewSessionEntity?
 }

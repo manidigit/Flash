@@ -1,13 +1,19 @@
 package com.app.flashlearn.domain.repository
 
 import com.app.flashlearn.domain.model.ReviewHistory
-import kotlinx.coroutines.flow.Flow
+import com.app.flashlearn.domain.model.ReviewOutcome
 
 interface ReviewHistoryRepository {
-    suspend fun insertReview(history: ReviewHistory): Long
-    fun getByConceptId(conceptId: Long): Flow<List<ReviewHistory>>
-    suspend fun getBySessionId(sessionId: String): List<ReviewHistory>
-    fun getTotalCorrect(): Flow<Int>
-    fun getTotalReviews(): Flow<Int>
-    fun getByDateRange(startDate: Long, endDate: Long): Flow<List<ReviewHistory>>
+    suspend fun record(
+        conceptId: Long,
+        sessionId: String?,
+        outcome: ReviewOutcome,
+        isCorrect: Boolean,
+        reviewDate: Long,
+        responseTimeMs: Long?
+    )
+
+    suspend fun countCorrectBetween(from: Long, to: Long): Int
+    suspend fun countTotalBetween(from: Long, to: Long): Int
+    suspend fun getForConcept(conceptId: Long): List<ReviewHistory>
 }

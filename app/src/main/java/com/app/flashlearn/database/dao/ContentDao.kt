@@ -1,27 +1,33 @@
 package com.app.flashlearn.database.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
 import com.app.flashlearn.database.entity.ContentEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ContentDao {
     @Insert
     suspend fun insert(content: ContentEntity): Long
 
-    @Update
-    suspend fun update(content: ContentEntity)
+    @Insert
+    suspend fun insertAll(contents: List<ContentEntity>)
 
-    @Delete
-    suspend fun delete(content: ContentEntity)
+    @Query("SELECT * FROM contents WHERE conceptId = :conceptId")
+    suspend fun getForConcept(conceptId: Long): List<ContentEntity>
 
-    @Query("SELECT * FROM content WHERE conceptId = :conceptId AND languageCode = :lang LIMIT 1")
-    suspend fun getByConceptAndLanguage(conceptId: Long, lang: String): ContentEntity?
+    @Query("DELETE FROM contents WHERE conceptId = :conceptId")
+    suspend fun deleteAllForConcept(conceptId: Long)
 
-    @Query("SELECT * FROM content WHERE conceptId = :conceptId")
-    suspend fun getByConceptId(conceptId: Long): List<ContentEntity>
+    @Query("SELECT COUNT(*) FROM contents WHERE conceptId = :conceptId AND languageCode = :languageCode AND text = :text")
+    suspend fun countMatching(conceptId: Long, languageCode: String, text: String): Int
+
+    @Query(
+        """
+        SELECT text FROM contents
+        WHERE languageCode = :languageCode AND conceptId != :excludeConceptId
+        ORDER BY RANDOM() LIMIT :limit
+        """
+    )
+    suspend fun getRandomTexts(languageCode: String, excludeConceptId: Long, limit: Int): List<String>
 }

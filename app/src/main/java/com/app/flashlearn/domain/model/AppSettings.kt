@@ -6,5 +6,6 @@ data class AppSettings(
     val appTheme: String = "DARK",
     val appLanguage: String = "fa",
     val sourceLanguage: String = "fa",
-    val targetLanguage: String = "en"
+    val targetLanguage: String = "en",
+    val onboardingCompleted: Boolean = false
 )
