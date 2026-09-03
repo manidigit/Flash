@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.flashlearn.database.dao.AppSettingsDao
 import com.app.flashlearn.domain.model.AppSettings
+import com.app.flashlearn.domain.model.LanguagePair
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -14,7 +15,8 @@ enum class ThemeMode { LIGHT, DARK, SYSTEM }
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.DARK,
     val sourceLanguage: String = "fa",
-    val targetLanguage: String = "en"
+    val targetLanguage: String = "en",
+    val activePair: LanguagePair? = null
 )
 
 @HiltViewModel
@@ -26,7 +28,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         appSettingsDao.getSettings().onEach { s ->
-            val settings = s ?: AppSettings()
+            val settings = s ?: com.app.flashlearn.database.entity.AppSettingsEntity()
             _uiState.value = _uiState.value.copy(
                 themeMode = when (settings.appTheme.uppercase()) {
                     "LIGHT" -> ThemeMode.LIGHT
@@ -34,7 +36,8 @@ class SettingsViewModel @Inject constructor(
                     else -> ThemeMode.DARK
                 },
                 sourceLanguage = settings.sourceLanguage,
-                targetLanguage = settings.targetLanguage
+                targetLanguage = settings.targetLanguage,
+                activePair = LanguagePair(0, settings.sourceLanguage, settings.targetLanguage, true)
             )
         }.launchIn(viewModelScope)
     }
