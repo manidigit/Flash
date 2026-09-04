@@ -6,10 +6,10 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "learning_state",
+    tableName = "learning_states",
     indices = [
         Index(value = ["stage"]),
-        Index(value = ["stage", "nextReviewAt"]),
+        Index(value = ["nextReviewAt"]),
         Index(value = ["difficulty"])
     ],
     foreignKeys = [
@@ -22,13 +22,12 @@ import androidx.room.PrimaryKey
     ]
 )
 data class LearningStateEntity(
-    @PrimaryKey
-    val conceptId: Long,
+    @PrimaryKey val conceptId: Long,
     val stage: String,
     val difficulty: String,
     val nextReviewAt: Long?,
     val monthlyWrongCount: Int = 0,
     val totalCorrect: Int = 0,
     val totalWrong: Int = 0,
-    val lastReviewedAt: Long?
+    val lastReviewedAt: Long? = null
 )

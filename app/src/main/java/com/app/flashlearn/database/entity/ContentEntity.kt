@@ -6,11 +6,11 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "content",
+    tableName = "contents",
     indices = [
-        Index(value = ["conceptId"]),
+        Index(value = ["conceptId", "languageCode"], unique = true),
         Index(value = ["languageCode"]),
-        Index(value = ["conceptId", "languageCode"], unique = true)
+        Index(value = ["text"])
     ],
     foreignKeys = [
         ForeignKey(
@@ -28,14 +28,13 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ContentEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val conceptId: Long,
     val languageCode: String,
     val text: String,
-    val pronunciation: String?,
-    val definition: String?,
-    val example: String?,
-    val grammarNote: String?,
-    val usageNote: String?
+    val pronunciation: String? = null,
+    val definition: String? = null,
+    val example: String? = null,
+    val grammarNote: String? = null,
+    val usageNote: String? = null
 )

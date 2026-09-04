@@ -5,16 +5,8 @@ data class LearningState(
     val stage: ReviewStage,
     val difficulty: Difficulty,
     val nextReviewAt: Long?,
-    val monthlyWrongCount: Int,
-    val totalCorrect: Int,
-    val totalWrong: Int,
-    val lastReviewedAt: Long?
+    val monthlyWrongCount: Int = 0,
+    val totalCorrect: Int = 0,
+    val totalWrong: Int = 0,
+    val lastReviewedAt: Long? = null
 )
-
-enum class ReviewStage {
-    DAILY, WEEKLY, MONTHLY, LEARNED
-}
-
-enum class Difficulty {
-    EASY, MEDIUM, HARD, VERY_HARD
-}

@@ -1,23 +1,28 @@
 package com.app.flashlearn.database.entity
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "concept",
+    tableName = "concepts",
     indices = [
         Index(value = ["uuid"], unique = true),
         Index(value = ["categoryId"]),
-        Index(value = ["active"]),
-        Index(value = ["favorite"]),
-        Index(value = ["contentType"])
+        Index(value = ["active"])
+    ],
+    foreignKeys = [
+        ForeignKey(
+            entity = CategoryEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.SET_NULL
+        )
     ]
 )
 data class ConceptEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val uuid: String,
     val contentType: String,
     val categoryId: Long?,

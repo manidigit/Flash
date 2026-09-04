@@ -6,36 +6,21 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "review_history",
+    tableName = "review_histories",
     indices = [
         Index(value = ["conceptId"]),
         Index(value = ["sessionId"]),
-        Index(value = ["reviewDate"]),
-        Index(value = ["reviewStage"]),
-        Index(value = ["conceptId", "reviewDate"]),
-        Index(value = ["sessionId", "reviewAttemptId"], unique = true)
+        Index(value = ["reviewDate"])
     ],
     foreignKeys = [
-        ForeignKey(
-            entity = ConceptEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["conceptId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = ReviewSessionEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["sessionId"],
-            onDelete = ForeignKey.RESTRICT
-        )
+        ForeignKey(entity = ConceptEntity::class, parentColumns = ["id"], childColumns = ["conceptId"], onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = ReviewSessionEntity::class, parentColumns = ["id"], childColumns = ["sessionId"], onDelete = ForeignKey.CASCADE)
     ]
 )
 data class ReviewHistoryEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val conceptId: Long,
     val sessionId: String,
-    val reviewAttemptId: String,
     val reviewStage: String,
     val reviewDate: Long,
     val isCorrect: Boolean,
@@ -43,5 +28,5 @@ data class ReviewHistoryEntity(
     val newStatus: String,
     val previousDifficulty: String,
     val newDifficulty: String,
-    val responseTimeMs: Long?
+    val responseTimeMs: Long
 )

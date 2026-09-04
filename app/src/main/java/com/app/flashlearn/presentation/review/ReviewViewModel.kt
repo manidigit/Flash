@@ -1,54 +1,126 @@
 package com.app.flashlearn.presentation.review
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.flashlearn.domain.model.ReviewAnswer
-import com.app.flashlearn.domain.usecase.SubmitReviewAnswerUseCase
+import com.app.flashlearn.domain.model.Concept
+import com.app.flashlearn.domain.model.Content
+import com.app.flashlearn.domain.model.LanguagePair
+import com.app.flashlearn.domain.model.ReviewStage
+import com.app.flashlearn.domain.repository.LanguagePairRepository
+import com.app.flashlearn.domain.repository.ReviewRepository
+import com.app.flashlearn.domain.usecase.GetDueConceptsUseCase
+import com.app.flashlearn.domain.usecase.ProcessReviewAnswerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.Instant
 import javax.inject.Inject
+
+sealed interface ReviewUiState {
+    data object Loading : ReviewUiState
+    data object Empty : ReviewUiState
+    data class InProgress(
+        val currentIndex: Int,
+        val totalCount: Int,
+        val currentConcept: Concept,
+        val showAnswer: Boolean,
+        val sessionId: String
+    ) : ReviewUiState
+    data class Finished(val correctCount: Int, val wrongCount: Int, val totalCount: Int) : ReviewUiState
+    data class Error(val message: String) : ReviewUiState
+}
 
 @HiltViewModel
 class ReviewViewModel @Inject constructor(
-    private val submitReviewUseCase: SubmitReviewAnswerUseCase
+    private val getDueConceptsUseCase: GetDueConceptsUseCase,
+    private val processReviewAnswerUseCase: ProcessReviewAnswerUseCase,
+    private val reviewRepository: ReviewRepository,
+    private val languagePairRepository: LanguagePairRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(ReviewUiState())
+    private val reviewType: String = savedStateHandle["type"] ?: "DAILY"
+    private var activePair: LanguagePair? = null
+
+    private val _uiState = MutableStateFlow<ReviewUiState>(ReviewUiState.Loading)
     val uiState: StateFlow<ReviewUiState> = _uiState.asStateFlow()
 
-    fun submitAnswer(conceptId: Long, answer: ReviewAnswer, sessionId: String, attemptId: String) {
+    private var queue: List<Concept> = emptyList()
+    private var sessionId: String = ""
+    private var correctCount = 0
+    private var wrongCount = 0
+    private var startTimeOfCurrentCard = 0L
+
+    init { loadSession() }
+
+    private fun loadSession() {
         viewModelScope.launch {
-            val now = Instant.now()
-            val result = submitReviewUseCase(
-                conceptId = conceptId,
-                answer = answer,
+            _uiState.value = ReviewUiState.Loading
+            try {
+                activePair = languagePairRepository.getActivePair()
+                val stage = ReviewStage.valueOf(reviewType)
+                queue = getDueConceptsUseCase(stage)
+                if (queue.isEmpty()) {
+                    _uiState.value = ReviewUiState.Empty
+                    return@launch
+                }
+                val session = reviewRepository.startSession(reviewType)
+                sessionId = session.id
+                correctCount = 0
+                wrongCount = 0
+                showCard(0)
+            } catch (e: Exception) {
+                _uiState.value = ReviewUiState.Error(e.message ?: "خطای نامشخص")
+            }
+        }
+    }
+
+    private fun showCard(index: Int) {
+        startTimeOfCurrentCard = System.currentTimeMillis()
+        _uiState.value = ReviewUiState.InProgress(
+            currentIndex = index,
+            totalCount = queue.size,
+            currentConcept = queue[index],
+            showAnswer = false,
+            sessionId = sessionId
+        )
+    }
+
+    fun revealAnswer() {
+        val state = _uiState.value
+        if (state is ReviewUiState.InProgress) {
+            _uiState.value = state.copy(showAnswer = true)
+        }
+    }
+
+    fun frontContent(concept: Concept): Content? =
+        concept.contents.firstOrNull { it.languageCode == activePair?.sourceLanguage }
+
+    fun backContent(concept: Concept): Content? =
+        concept.contents.firstOrNull { it.languageCode == activePair?.targetLanguage }
+
+    fun submitAnswer(isCorrect: Boolean) {
+        val state = _uiState.value as? ReviewUiState.InProgress ?: return
+        val responseTime = System.currentTimeMillis() - startTimeOfCurrentCard
+
+        viewModelScope.launch {
+            processReviewAnswerUseCase(
+                conceptId = state.currentConcept.id,
                 sessionId = sessionId,
-                attemptId = attemptId,
-                responseTimeMs = null, // می‌توانید زمان پاسخ را محاسبه کنید
-                now = now
+                isCorrect = isCorrect,
+                responseTimeMs = responseTime
             )
-            result.onSuccess { transition ->
-                _uiState.value = _uiState.value.copy(
-                    lastTransition = transition,
-                    errorMessage = null
-                )
-            }.onFailure { error ->
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = error.message
-                )
+            if (isCorrect) correctCount++ else wrongCount++
+
+            val nextIndex = state.currentIndex + 1
+            if (nextIndex < queue.size) {
+                showCard(nextIndex)
+            } else {
+                reviewRepository.endSession(sessionId, System.currentTimeMillis())
+                _uiState.value = ReviewUiState.Finished(correctCount, wrongCount, queue.size)
             }
         }
     }
 }
-
-data class ReviewUiState(
-    val currentConcept: com.app.flashlearn.domain.model.Concept? = null,
-    val currentContent: com.app.flashlearn.domain.model.Content? = null,
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val lastTransition: com.app.flashlearn.domain.model.ReviewTransition? = null
-)

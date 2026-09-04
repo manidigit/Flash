@@ -1,13 +1,13 @@
 package com.app.flashlearn.domain.model
 
 data class Content(
-    val id: Long,
+    val id: Long = 0,
     val conceptId: Long,
     val languageCode: String,
     val text: String,
-    val pronunciation: String?,
-    val definition: String?,
-    val example: String?,
-    val grammarNote: String?,
-    val usageNote: String?
+    val pronunciation: String? = null,
+    val definition: String? = null,
+    val example: String? = null,
+    val grammarNote: String? = null,
+    val usageNote: String? = null
 )

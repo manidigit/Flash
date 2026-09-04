@@ -1,25 +1,21 @@
 package com.app.flashlearn.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
 import com.app.flashlearn.database.entity.ContentEntity
 
 @Dao
 interface ContentDao {
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(content: ContentEntity): Long
+    @Insert
+    suspend fun insertAll(contents: List<ContentEntity>)
 
-    @Update
-    suspend fun update(content: ContentEntity)
+    @Query("SELECT * FROM contents WHERE conceptId = :conceptId")
+    suspend fun getByConceptId(conceptId: Long): List<ContentEntity>
 
-    @Delete
-    suspend fun delete(content: ContentEntity)
+    @Query("SELECT * FROM contents WHERE conceptId = :conceptId AND languageCode = :lang")
+    suspend fun getByConceptAndLanguage(conceptId: Long, lang: String): ContentEntity?
 
-    @Query("SELECT * FROM content WHERE conceptId = :conceptId ORDER BY languageCode")
-    suspend fun findByConcept(conceptId: Long): List<ContentEntity>
-
-    @Query("SELECT * FROM content WHERE conceptId = :conceptId AND languageCode = :languageCode LIMIT 1")
-    suspend fun findByConceptAndLanguage(conceptId: Long, languageCode: String): ContentEntity?
-
-    @Query("SELECT * FROM content WHERE languageCode = :languageCode AND text LIKE '%' || :query || '%'")
-    suspend fun searchByText(languageCode: String, query: String): List<ContentEntity>
+    @Query("DELETE FROM contents WHERE conceptId = :conceptId")
+    suspend fun deleteByConceptId(conceptId: Long)
 }

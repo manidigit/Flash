@@ -1,56 +1,37 @@
 package com.app.flashlearn.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.app.flashlearn.database.entity.ConceptEntity
 import com.app.flashlearn.database.entity.LearningStateEntity
-import kotlinx.coroutines.flow.Flow
+
+data class DifficultyCount(val difficulty: String, val count: Int)
 
 @Dao
 interface LearningStateDao {
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(state: LearningStateEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(state: LearningStateEntity)
 
-    @Update
-    suspend fun update(state: LearningStateEntity)
-
-    @Query("SELECT * FROM learning_state WHERE conceptId = :conceptId LIMIT 1")
-    suspend fun findByConcept(conceptId: Long): LearningStateEntity?
-
-    @Query("SELECT * FROM learning_state WHERE conceptId = :conceptId LIMIT 1")
-    fun observeByConcept(conceptId: Long): Flow<LearningStateEntity?>
-
-    @Query(
-        """
-        SELECT * FROM learning_state
-        WHERE stage = :stage
-          AND nextReviewAt <= :now
-        ORDER BY nextReviewAt ASC, conceptId ASC
-        """
-    )
-    suspend fun findDueByStage(stage: String, now: Long): List<LearningStateEntity>
+    @Query("SELECT * FROM learning_states WHERE conceptId = :conceptId")
+    suspend fun getByConceptId(conceptId: Long): LearningStateEntity?
 
     @Query("""
-        UPDATE learning_state
-        SET stage = :newStage,
-            difficulty = :newDifficulty,
-            nextReviewAt = :newNextReviewAt,
-            monthlyWrongCount = :newMonthlyWrongCount,
-            totalCorrect = :newTotalCorrect,
-            totalWrong = :newTotalWrong,
-            lastReviewedAt = :newLastReviewedAt
-        WHERE conceptId = :conceptId
-          AND stage = :expectedStage
-          AND difficulty = :expectedDifficulty
+        SELECT c.* FROM concepts c
+        JOIN learning_states ls ON ls.conceptId = c.id
+        WHERE ls.stage = :stage AND (ls.nextReviewAt IS NULL OR ls.nextReviewAt <= :now)
+        AND c.active = 1
     """)
-    suspend fun updateWithExpectedState(
-        conceptId: Long,
-        expectedStage: String,
-        expectedDifficulty: String,
-        newStage: String,
-        newDifficulty: String,
-        newNextReviewAt: Long?,
-        newMonthlyWrongCount: Int,
-        newTotalCorrect: Int,
-        newTotalWrong: Int,
-        newLastReviewedAt: Long?
-    ): Int
+    suspend fun getDueConcepts(stage: String, now: Long): List<ConceptEntity>
+
+    @Query("SELECT COUNT(*) FROM learning_states WHERE stage = :stage")
+    suspend fun countByStage(stage: String): Int
+
+    @Query("""
+        SELECT difficulty, COUNT(*) as count
+        FROM learning_states
+        GROUP BY difficulty
+    """)
+    suspend fun getDifficultyDistribution(): List<DifficultyCount>
 }

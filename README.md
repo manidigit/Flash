@@ -1,25 +1,52 @@
-# FlashLearn - Android Flashcard Learning App
+# FlashLearn — خروجی دور اسناد معماری (۰۱ تا ۱۴)
 
-پروژه کامل اپلیکیشن اندروید یادگیری با کارت‌های فلش بر اساس Clean Architecture.
+این پوشه حاصل تجمیع و رفع‌تکرارِ همه‌ی کدهای نمونه‌ای است که در اسناد ۰۱ تا ۱۴ تولید شدند.
+**این کد تست کامپایل نشده** (چون این محیط دسترسی به Android SDK/Gradle واقعی ندارد) —
+باید در Termux یا Android Studio واقعاً build بشه و خطاهای احتمالی برطرف بشن.
 
-## ساختار پروژه
-- **Clean Architecture** با لایه‌های Domain / Data / Presentation
-- **Room Database** برای ذخیره‌سازی محلی
-- **Hilt** برای Dependency Injection
-- **Jetpack Compose + Material 3**
-- **Coroutines + Flow**
-- الگوریتم مرور فاصله‌دار (Spaced Repetition) سفارشی
+## قبل از استفاده حتماً بخون
 
-## نحوه استفاده
-1. فایل ZIP را دانلود و استخراج کنید.
-2. پروژه را در Android Studio باز کنید (Open an Existing Project).
-3. Gradle Sync را اجرا کنید.
-4. روی یک امولاتور یا دستگاه واقعی Build & Run کنید.
+۱. **AI Translation Service** (`data/ai/AITranslationServiceImpl.kt`) کاملاً حدسی و تست‌نشده است.
+   باید provider واقعی مشخص بشه و با کلید واقعی تست بشه.
 
-## نکات
-- این کدها بر اساس مشخصات ارائه شده نوشته شده‌اند.
-- برخی صفحات (مثل Add، Settings کامل، Statistics) اسکلت هستند و می‌توانید آن‌ها را گسترش دهید.
-- برای تولید واقعی، Migrationهای Room را جایگزین `fallbackToDestructiveMigration` کنید.
-- آیکون‌های launcher (mipmap) وجود ندارند؛ Android Studio به‌صورت پیش‌فرض آن‌ها را مدیریت می‌کند یا خودتان اضافه کنید.
+۲. **Migration های Room واقعی وجود ندارند** — فقط ورژن ۱ دیتابیس تعریف شده. هر تغییر schema بعدی
+   نیاز به یک Migration صریح داره وگرنه داده کاربر از بین می‌ره.
 
-ساخته شده برای سهولت دانلود و استفاده روی موبایل.
+۳. **فونت Vazirmatn اضافه نشده** — باید فایل فونت رو دستی در `res/font/` بذاری و در
+   `ui/theme/Theme.kt` به Typography وصلش کنی.
+
+۴. **match کردن دسته‌بندی هنگام Import کلمات** (`data/backup/JsonBackupServiceImpl.kt`) ناقصه —
+   فعلاً `categoryId = null` هنگام import.
+
+۵. **isFirstLaunch در MainActivity.kt هاردکد شده به false** — باید از `AppSettingsRepository`
+   یا یک DataStore جدا خونده بشه.
+
+۶. **تست‌های Unit فقط placeholder هستن** (`app/src/test/`) — نیاز به Fake Repository ها دارن.
+
+## کارهایی که اصلاً در این دور اسناد لمس نشدن (طبق حافظه پروژه)
+
+- استخراج پرانتزی متن به notes + دکمه رفرش (صفحه Vocabulary)
+- Hint button در حالت چندگزینه‌ای
+- فیکس چیدمان صفحه Paste-text وقتی کیبورد بازه
+- Tag-based filtering پیشرفته + نمایش دسته‌بندی روی خود فلش‌کارت
+- XLSX/SQLite Export
+- حالت‌های AI/Paste/Import کامل در AddConceptScreen (فقط Manual + دکمه AI ساده)
+
+## ساختار
+
+```
+app/src/main/java/com/app/flashlearn/
+├── database/       (Entity, DAO, Database)
+├── domain/         (Model, Repository interface, Service interface, UseCase)
+├── data/           (Mapper, Repository impl, AI, Backup)
+├── di/             (Hilt Modules)
+├── presentation/   (ViewModel + Screen به تفکیک فیچر)
+├── ui/theme/       (رنگ‌ها و Theme طبق Design System)
+└── navigation/     (NavGraph، BottomBar، Screen routes)
+```
+
+## مرجع کامل تصمیم‌ها و نکات باز
+
+برای جزئیات کامل هر تصمیم (چرا uuid به‌جای id، چرا فیلتر client-side به Query تبدیل شد، و غیره)
+به اسناد `01` تا `14` (که جدا از این zip در چت موجودن) مراجعه کن — این‌ها توضیح می‌دن *چرا* هر
+تصمیمی گرفته شده، نه فقط *چی* نوشته شده.

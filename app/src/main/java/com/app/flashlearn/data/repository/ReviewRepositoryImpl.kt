@@ -1,78 +1,45 @@
 package com.app.flashlearn.data.repository
 
-import com.app.flashlearn.database.FlashLearnDatabase
-import com.app.flashlearn.database.entity.ReviewHistoryEntity
 import com.app.flashlearn.data.mapper.toDomain
-import com.app.flashlearn.domain.model.LearningState
-import com.app.flashlearn.domain.model.ReviewHistory
-import com.app.flashlearn.domain.model.ReviewTransition
+import com.app.flashlearn.data.mapper.toEntity
+import com.app.flashlearn.database.dao.ReviewHistoryDao
+import com.app.flashlearn.database.dao.ReviewSessionDao
+import com.app.flashlearn.domain.model.ReviewHistoryEntry
+import com.app.flashlearn.domain.model.ReviewSession
 import com.app.flashlearn.domain.repository.ReviewRepository
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 class ReviewRepositoryImpl @Inject constructor(
-    private val database: FlashLearnDatabase
+    private val sessionDao: ReviewSessionDao,
+    private val historyDao: ReviewHistoryDao
 ) : ReviewRepository {
-
-    override suspend fun getLearningState(conceptId: Long): LearningState? {
-        return database.learningStateDao().findByConcept(conceptId)?.toDomain()
+    override suspend fun startSession(reviewType: String): ReviewSession {
+        val session = ReviewSession(
+            id = generateSessionId(),
+            startedAt = System.currentTimeMillis(),
+            endedAt = null,
+            reviewType = reviewType
+        )
+        sessionDao.insert(session.toEntity())
+        return session
     }
 
-    override suspend fun saveTransition(transition: ReviewTransition) {
-        // اجرای تراکنش
-        database.apply {
-            // بروزرسانی learning_state با شرط optimistic lock
-            val updatedRows = learningStateDao().updateWithExpectedState(
-                conceptId = transition.conceptId,
-                expectedStage = transition.previousState.stage.name,
-                expectedDifficulty = transition.previousState.difficulty.name,
-                newStage = transition.newState.stage.name,
-                newDifficulty = transition.newState.difficulty.name,
-                newNextReviewAt = transition.newState.nextReviewAt,
-                newMonthlyWrongCount = transition.newState.monthlyWrongCount,
-                newTotalCorrect = transition.newState.totalCorrect,
-                newTotalWrong = transition.newState.totalWrong,
-                newLastReviewedAt = transition.newState.lastReviewedAt
-            )
-            if (updatedRows == 0) {
-                throw IllegalStateException("Concurrent modification detected")
-            }
-
-            // درج history
-            val historyEntity = ReviewHistoryEntity(
-                conceptId = transition.conceptId,
-                sessionId = transition.sessionId,
-                reviewAttemptId = transition.reviewAttemptId,
-                reviewStage = transition.previousState.stage.name,
-                reviewDate = transition.newState.lastReviewedAt ?: System.currentTimeMillis(),
-                isCorrect = transition.isCorrect,
-                previousStatus = transition.previousState.stage.name,
-                newStatus = transition.newState.stage.name,
-                previousDifficulty = transition.previousState.difficulty.name,
-                newDifficulty = transition.newState.difficulty.name,
-                responseTimeMs = transition.responseTimeMs
-            )
-            reviewHistoryDao().insert(historyEntity)
-        }
+    override suspend fun endSession(sessionId: String, endedAt: Long) {
+        val existing = sessionDao.getById(sessionId) ?: return
+        sessionDao.update(existing.copy(endedAt = endedAt))
     }
 
-    override suspend fun getReviewHistoryForConcept(conceptId: Long): List<ReviewHistory> {
-        return database.reviewHistoryDao().findByConcept(conceptId).map { entity ->
-            ReviewHistory(
-                id = entity.id,
-                conceptId = entity.conceptId,
-                sessionId = entity.sessionId,
-                reviewAttemptId = entity.reviewAttemptId,
-                reviewStage = entity.reviewStage,
-                reviewDate = entity.reviewDate,
-                isCorrect = entity.isCorrect,
-                previousStatus = entity.previousStatus,
-                newStatus = entity.newStatus,
-                previousDifficulty = entity.previousDifficulty,
-                newDifficulty = entity.newDifficulty,
-                responseTimeMs = entity.responseTimeMs
-            )
-        }
+    override suspend fun recordHistory(entry: ReviewHistoryEntry) =
+        historyDao.insert(entry.toEntity())
+
+    override suspend fun getHistoryForConcept(conceptId: Long) =
+        historyDao.getByConceptId(conceptId).map { it.toDomain() }
+
+    private fun generateSessionId(): String {
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        return "$date-${(1000..9999).random()}"
     }
 }

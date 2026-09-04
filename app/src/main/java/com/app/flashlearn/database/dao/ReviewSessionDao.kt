@@ -1,20 +1,19 @@
 package com.app.flashlearn.database.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
 import com.app.flashlearn.database.entity.ReviewSessionEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReviewSessionDao {
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert
     suspend fun insert(session: ReviewSessionEntity)
 
-    @Query("UPDATE review_session SET endedAt = :endedAt WHERE id = :sessionId AND endedAt IS NULL")
-    suspend fun closeSession(sessionId: String, endedAt: Long)
+    @Update
+    suspend fun update(session: ReviewSessionEntity)
 
-    @Query("SELECT * FROM review_session WHERE id = :id LIMIT 1")
-    suspend fun findById(id: String): ReviewSessionEntity?
-
-    @Query("SELECT * FROM review_session WHERE id = :id LIMIT 1")
-    fun observeById(id: String): Flow<ReviewSessionEntity?>
+    @Query("SELECT * FROM review_sessions WHERE id = :id")
+    suspend fun getById(id: String): ReviewSessionEntity?
 }
