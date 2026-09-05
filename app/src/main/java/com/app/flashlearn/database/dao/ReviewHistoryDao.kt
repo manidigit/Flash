@@ -17,7 +17,7 @@ interface ReviewHistoryDao {
     suspend fun getByConceptId(conceptId: Long): List<ReviewHistoryEntity>
 
     @Query("""
-        SELECT date(reviewDate / 1000, \x27unixepoch\x27, \x27localtime\x27) as day, COUNT(*) as count
+        SELECT date(reviewDate / 1000, 'unixepoch', 'localtime') as day, COUNT(*) as count
         FROM review_histories
         WHERE reviewDate >= :sinceEpochMillis
         GROUP BY day
@@ -26,7 +26,7 @@ interface ReviewHistoryDao {
     suspend fun getDailyReviewCounts(sinceEpochMillis: Long): List<DailyCount>
 
     @Query("""
-        SELECT DISTINCT date(reviewDate / 1000, \x27unixepoch\x27, \x27localtime\x27) as day
+        SELECT DISTINCT date(reviewDate / 1000, 'unixepoch', 'localtime') as day
         FROM review_histories
         ORDER BY day DESC
     """)
